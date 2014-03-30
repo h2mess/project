@@ -25,7 +25,7 @@
 
 #include "cs296_base.hpp"
 #include "render.hpp"
-
+#include<math.h>
 #ifdef __APPLE__
 	#include <GLUT/glut.h>
 #else
@@ -50,8 +50,27 @@ namespace cs296
 	float pebbleWidth = 2;
 	float wheelRadius = 6;
 	float gap = wheelRadius*3;//this is gap between centers of wheels
+	float firstWheelCenterx = 0;//this is x position of center of first wheel
+	float rodWidth = 1;
+	float density = 1;
+	float pi = 3.14159;
+	float length_bigrectangle = 4*wheelRadius + 3;
+	float breadth_bigrectangle = 10;
+	float modifier = 7;
+	float x_bigrectangle = firstWheelCenterx + wheelRadius*3;
+	float y_bigrectangle = groundHeight + wheelRadius*2 + breadth_bigrectangle-2;
+	float length_backrectangle = 8;
+	float breadth_backrectangle = breadth_bigrectangle + wheelRadius/2;
+	float x_backrectangle = x_bigrectangle - length_bigrectangle - length_backrectangle;
+	float y_backrectangle = y_bigrectangle-wheelRadius/2;
+	float height_exhaust = wheelRadius;
   dominos_t::dominos_t()
   {
+/*	  void keyboard(unsigned char key){
+		  switch(key){
+			  case 'm':
+			  default :
+				  base_sim_t::keyboard(key);*/
 	  //This is for creating ground with those brown steps
 
     b2Body* b1;  
@@ -85,49 +104,238 @@ namespace cs296
 	wheelShape.m_radius = wheelRadius;
 	b2BodyDef wheelBodyDef;
 	wheelBodyDef.type = b2_dynamicBody;		
-	wheelBodyDef.position.Set(0,groundHeight+wheelRadius);
+	wheelBodyDef.position.Set(firstWheelCenterx,groundHeight+wheelRadius);
 	b2Body* wheelBody1 = (*m_world).CreateBody(&wheelBodyDef);
 	b2FixtureDef wheelFixtureDef;
+	wheelFixtureDef.density = density;
+	wheelFixtureDef.filter.groupIndex = -2;	
 //	wheelFixtureDef.restitution = 0;
 	wheelFixtureDef.shape = &wheelShape;
 	(*wheelBody1).CreateFixture(&wheelFixtureDef);
 	//wheel is made!!
 	//How about a second wheel
-	wheelBodyDef.position.Set(gap, groundHeight+wheelRadius);//this is actually 0+gap
+	wheelBodyDef.position.Set(firstWheelCenterx+gap, groundHeight+wheelRadius);//this is actually 0+gap
 	b2Body* wheelBody2 = (*m_world).CreateBody(&wheelBodyDef);
 	(*wheelBody2).CreateFixture(&wheelFixtureDef);
 	//One more wheel (not for nothing)
-	wheelBodyDef.position.Set(gap+gap, groundHeight+wheelRadius);
+	wheelBodyDef.position.Set(firstWheelCenterx+gap+gap, groundHeight+wheelRadius);
 	b2Body* wheelBody3 = (*m_world).CreateBody(&wheelBodyDef);
 	(*wheelBody3).CreateFixture(&wheelFixtureDef);
 
 	//Second victory!!
 	//Here starts the joint for a wheel
-	b2PolygonShape concShape;
-	concShape.SetAsBox(0.5,2);
-	b2BodyDef concBodyDef;
-	concBodyDef.type = b2_dynamicBody;
-	concBodyDef.angle = -0.7;
-	concBodyDef.position.Set(wheelRadius*2,wheelRadius);
-	b2Body* concBody = (*m_world).CreateBody(&concBodyDef);
-	b2FixtureDef concFixtureDef;
-//	concFixtureDef.density = 1000;
-	concFixtureDef.shape = &concShape;
-	(*concBody).CreateFixture(&concFixtureDef);
-	//Now, the joint between those two
-	b2RevoluteJointDef concJointDef;
-	concJointDef.bodyA = concBody;
-	concJointDef.bodyB = wheelBody1;
-	concJointDef.localAnchorB.Set(wheelRadius/2,wheelRadius/2);
-	concJointDef.localAnchorA.Set(-1,-1);
-	(b2RevoluteJoint*)m_world->CreateJoint(&concJointDef);
 	/*Now, we need to make a rod between circle1 and circle3. Let point on circle1 be called a and point on circle 3 be called b. we connect a to c1 by using revolute joint, similarly for b and c3. This ensures that the system is setup. First work is to setup a and b. Qns are 
 	1. How do you locate a, b(It must be responsive. So, no hardcoding)
 	2. How can we make revolute joints?(We have to give anchor points relative to bodies)
 	*/
+	
+	  ///chalo, chalo, chalo
+	b2PolygonShape otrodShape;
+	otrodShape.SetAsBox(gap, rodWidth/2);
+	b2BodyDef otrodBodyDef;
+	otrodBodyDef.type = b2_dynamicBody;
+	otrodBodyDef.position.Set(firstWheelCenterx+(wheelRadius/2)+gap, wheelRadius*1.5+groundHeight);
+	b2Body* otrodBody = (*m_world).CreateBody(&otrodBodyDef);
+	b2FixtureDef otrodFixtureDef;
+	otrodFixtureDef.density = 5*density;
+	otrodFixtureDef.filter.groupIndex = -2;
+	otrodFixtureDef.shape = &otrodShape;
+	(*otrodBody).CreateFixture(&otrodFixtureDef);
+	//This completes the rod between one and three 'd wheels
 
 
-  }
+	//Joint joining them
+	b2RevoluteJointDef orJointDef;
+	orJointDef.bodyA = wheelBody1;
+	orJointDef.bodyB = otrodBody;
+	orJointDef.localAnchorA.Set(wheelRadius/2, wheelRadius/2);
+	orJointDef.localAnchorB.Set(-gap,0);
+	(b2RevoluteJoint*) m_world->CreateJoint(&orJointDef);
+	//joint with first wheel is done
 
-  sim_t *sim = new sim_t("Dominos", dominos_t::create);
-}
+	//Joint joining them
+//	b2RevoluteJointDef orJointDef;
+	orJointDef.bodyA = wheelBody3;
+//	orJointDef.bodyB = otrodBody;
+//	orJointDef.localAnchorA.Set(wheelRadius/2, wheelRadius/2);
+	orJointDef.localAnchorB.Set(gap,0);
+	(b2RevoluteJoint*) m_world->CreateJoint(&orJointDef);
+	//joint with third wheel is done
+
+	//Here comes the holy joint connecting otrod and wheelBody2
+	//here otrod acts as this holy joint
+	otrodShape.SetAsBox(rodWidth/2,(wheelRadius/4)*sqrt(2));
+	otrodBodyDef.position.Set(firstWheelCenterx+gap+wheelRadius/4, groundHeight+wheelRadius*(1+(1.0/4)));
+	otrodBodyDef.angle = -pi/4; //angle is clockwise by default
+	b2Body* holyrodBody = (*m_world).CreateBody(&otrodBodyDef);
+//	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
+	otrodFixtureDef.shape = &otrodShape;
+	otrodFixtureDef.filter.groupIndex = 3;
+	(*holyrodBody).CreateFixture(&otrodFixtureDef);
+	
+	//holyrodBody with wheelBody2
+/*	orJointDef.bodyA = wheelBody2;
+	orJointDef.bodyB = holyrodBody;
+	orJointDef.localAnchorA.Set(0,0);
+	orJointDef.localAnchorB.Set(-wheelRadius/4,-wheelRadius/4);
+	(b2RevoluteJoint*) m_world->CreateJoint(&orJointDef);*/
+	orJointDef.Initialize(wheelBody2, holyrodBody, (*wheelBody2).GetPosition());
+	(*m_world).CreateJoint(&orJointDef);
+
+/*	orJointDef.localAnchorA.Set(wheelRadius/2,wheelRadius/2);
+	orJointDef.localAnchorB.Set(wheelRadius/4,wheelRadius/4);
+	(b2RevoluteJoint*) (*m_world).CreateJoint(&orJointDef);*/
+	orJointDef.Initialize(wheelBody2, holyrodBody, b2Vec2(firstWheelCenterx + gap + wheelRadius/2, groundHeight + wheelRadius + wheelRadius/2));
+	(*m_world).CreateJoint(&orJointDef);
+	orJointDef.Initialize(otrodBody, holyrodBody, b2Vec2(firstWheelCenterx + gap + wheelRadius/2, groundHeight + wheelRadius + wheelRadius/2));
+	(*m_world).CreateJoint(&orJointDef);
+	//holyrod is done with wheelBody2;
+/*	
+	//holyrod with otrodBody
+	orJointDef.bodyA = otrodBody;
+	orJointDef.localAnchorA.Set(0,0);
+	orJointDef.localAnchorB.Set(wheelRadius/2,wheelRadius/4);
+	(b2RevoluteJoint*) (*m_world).CreateJoint(&orJointDef);
+*/
+
+
+	/*b2RevoluteJointDef onethreeDef;
+	onethreeDef.bodyA = wheelBody1;
+	onethreeDef.bodyB = wheelBody3;
+	onethreeDef.localAnchorA.Set(-wheelRadius/2,
+*/
+// Mahindar code ===============================================================================================================
+		/*b2Vec2 rec_vertices[6];
+	rec_vertices[0].Set(x_bigrectangle + length_bigrectangle,y_bigrectangle + breadth_bigrectangle);
+	rec_vertices[1].Set(x_bigrectangle - length_bigrectangle,y_bigrectangle + breadth_bigrectangle);
+	//rec_vertices[2].Set(x_bigrectangle - length_bigrectangle,y_bigrectangle - breadth_bigrectangle - wheelRadius);
+	//rec_vertices[3].Set(x_bigrectangle - length_bigrectangle + modifier,y_bigrectangle - breadth_bigrectangle - wheelRadius);
+	rec_vertices[2].Set(x_bigrectangle - length_bigrectangle ,y_bigrectangle - breadth_bigrectangle - wheelRadius);
+	rec_vertices[3].Set(x_bigrectangle + length_bigrectangle ,y_bigrectangle - breadth_bigrectangle - wheelRadius);
+	rec_vertices[4].Set(x_bigrectangle + length_bigrectangle - modifier,y_bigrectangle - breadth_bigrectangle - wheelRadius);
+	rec_vertices[5].Set(x_bigrectangle + length_bigrectangle, y_bigrectangle - breadth_bigrectangle - wheelRadius);*/
+	// This is for big bogey in train
+	b2PolygonShape bigrectangle_shape;
+	bigrectangle_shape.SetAsBox(length_bigrectangle,breadth_bigrectangle);
+	b2BodyDef bigrectangle_def;
+	bigrectangle_def.type = b2_dynamicBody;
+	bigrectangle_def.position.Set(x_bigrectangle,y_bigrectangle);
+	b2Body* bigrectangle_body = (*m_world).CreateBody(&bigrectangle_def);
+	b2FixtureDef bigrectangle_fixture;
+	bigrectangle_fixture.shape = &bigrectangle_shape;
+	bigrectangle_fixture.density = 1.0;
+	bigrectangle_fixture.filter.groupIndex = -2;
+	(*bigrectangle_body).CreateFixture(&bigrectangle_fixture);
+	
+	// big rectangle wheel body joint def
+
+
+	b2RevoluteJointDef br_wh_def1;
+	br_wh_def1.Initialize(bigrectangle_body,wheelBody1,wheelBody1->GetPosition());
+	b2RevoluteJointDef br_wh_def2;
+	br_wh_def2.Initialize(bigrectangle_body,wheelBody2,wheelBody2->GetPosition());
+	b2RevoluteJointDef br_wh_def3;
+	br_wh_def3.Initialize(bigrectangle_body,wheelBody3,wheelBody3->GetPosition());
+	m_world->CreateJoint(&br_wh_def1);
+	m_world->CreateJoint(&br_wh_def2);
+	m_world->CreateJoint(&br_wh_def3);
+	/**m_world->CreateJoint(&br_wh_joint1);
+	m_world->CreateJoint(&br_wh_joint2);
+	m_world->CreateJoint(&br_wh_joint3);*/
+
+
+	//realm of back rectangle
+
+		b2PolygonShape backrectangle_shape;
+	backrectangle_shape.SetAsBox(length_backrectangle,breadth_backrectangle);
+	b2BodyDef backrectangle_def;
+	backrectangle_def.type = b2_dynamicBody;
+	backrectangle_def.position.Set(x_backrectangle,y_backrectangle);
+	b2Body* backrectangle_body = (*m_world).CreateBody(&backrectangle_def);
+	b2FixtureDef backrectangle_fixture;
+	backrectangle_fixture.shape = &backrectangle_shape;
+	backrectangle_fixture.density = 1.0;
+	backrectangle_fixture.filter.groupIndex = -2;
+	(*backrectangle_body).CreateFixture(&backrectangle_fixture);
+
+
+	//big rectangle back rectangle joints
+	
+	
+	b2Vec2 big_back_point1;
+	big_back_point1.Set(x_backrectangle+length_backrectangle,y_backrectangle+breadth_backrectangle);
+	b2RevoluteJointDef big_back_def1;
+	big_back_def1.Initialize(bigrectangle_body,backrectangle_body,big_back_point1);
+	m_world->CreateJoint(&big_back_def1);
+	
+	b2Vec2 big_back_point2;
+	big_back_point2.Set(x_backrectangle + length_backrectangle,y_backrectangle - breadth_backrectangle);
+	b2RevoluteJointDef big_back_def2;
+	big_back_def2.Initialize(bigrectangle_body,backrectangle_body,big_back_point2);
+	m_world->CreateJoint(&big_back_def2);
+
+	/*b2Vec2 welding_point1;
+	welding_point1.Set(x_backrectangle+length_backrectangle,y_backrectangle);
+	b2WeldJointDef bir_bar_def1;
+	bir_bar_def1.Initialize(bigrectangle_body,backrectangle_body,welding_point);
+	m_world->CreateJoint(&bir_bar_def1);*/
+
+	//Circle under the back rectangle
+
+
+	b2CircleShape smallcircle_shape;
+	smallcircle_shape.m_p.Set(0,0);
+	smallcircle_shape.m_radius = wheelRadius/2;
+
+
+	b2BodyDef smallcircle_def1;
+	smallcircle_def1.type = b2_dynamicBody;
+	smallcircle_def1.position.Set(x_backrectangle,groundHeight+wheelRadius/2);
+	b2Body* smallcircle_body1 = (*m_world).CreateBody(&smallcircle_def1);
+
+
+
+	b2FixtureDef smallcircle_fixture;
+	smallcircle_fixture.shape = &smallcircle_shape;
+	smallcircle_fixture.density = 1.0;
+	smallcircle_fixture.filter.groupIndex = -2;
+	(*smallcircle_body1).CreateFixture(&smallcircle_fixture);
+	
+
+	// Joint to connect back circle
+	b2RevoluteJointDef sc_back_def;
+	sc_back_def.Initialize(backrectangle_body,smallcircle_body1,smallcircle_body1->GetPosition());
+	m_world->CreateJoint(&sc_back_def);
+	//Mahindar code graciously ends=============================================================================================================
+	
+	bigrectangle_def.position.Set(firstWheelCenterx + 2*gap, y_bigrectangle +  breadth_bigrectangle + height_exhaust/2);
+    bigrectangle_shape.SetAsBox(height_exhaust/2, height_exhaust/2);
+	bigrectangle_fixture.filter.groupIndex = 1;
+	bigrectangle_fixture.shape = &bigrectangle_shape;
+	b2Body* exhaustBody = (*m_world).CreateBody(&bigrectangle_def);
+	(*exhaustBody).CreateFixture(&bigrectangle_fixture);
+	
+	////////////////////////////Test car ====================================================
+	b2PolygonShape chassis;
+			b2Vec2 vertices[8];
+			vertices[0].Set(-1.5f, -0.5f);
+			vertices[1].Set(1.5f, -0.5f);
+			vertices[2].Set(1.5f, 0.0f);
+			vertices[3].Set(0.0f, 0.9f);
+			vertices[4].Set(-1.15f, 0.9f);
+			vertices[5].Set(-1.5f, 0.2f);
+			chassis.Set(vertices, 6);
+
+			b2CircleShape circle;
+			circle.m_radius = 0.4f;
+
+			b2BodyDef bd;
+			bd.type = b2_dynamicBody;
+			bd.position.Set(0.0f, 1.0f);
+			b2Body* m_car = m_world->CreateBody(&bd);
+			m_car->CreateFixture(&chassis, 1.0f);
+	////////////////////////Test Car ==================================================
+
+ 	}
+ 	 sim_t *sim = new sim_t("Dominos", dominos_t::create);
+ }
