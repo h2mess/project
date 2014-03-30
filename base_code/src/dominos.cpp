@@ -66,6 +66,8 @@ namespace cs296
 	float height_exhaust = wheelRadius;
 	float frontWidth = length_backrectangle -0;
 	float frontHeight = (breadth_backrectangle - breadth_bigrectangle)*2;
+	float stabbingRodLength = 8;
+	float stabbingWidth = 2;
   dominos_t::dominos_t()
   {
 /*	  void keyboard(unsigned char key){
@@ -392,6 +394,7 @@ namespace cs296
 	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
 	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/4), y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
 	newFixture.shape = &backrectangle_shape;
+	newFixture.density = 0;
 	b2Body* othird = (*m_world).CreateBody(&backrectangle_def);
 	(*othird).CreateFixture(&newFixture);
 
@@ -407,7 +410,7 @@ namespace cs296
 	b2DistanceJointDef distance;
 	distance.Initialize(ofirst, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
 	(*m_world).CreateJoint(&distance);
-
+	
 
 	distance.Initialize(othird, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + 2*frontWidth-frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(9.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
 	(*m_world).CreateJoint(&distance);
@@ -420,11 +423,43 @@ namespace cs296
 	
 	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle - breadth_backrectangle));
 	(*m_world).CreateJoint(&big_back_def1);
+	
+	//This is the pumpingRod
 
 
+	backrectangle_shape.SetAsBox(rodWidth/2, frontHeight/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* pumpingRod = (*m_world).CreateBody(&backrectangle_def);
+	(*pumpingRod).CreateFixture(&newFixture);
+	
+	//now, the moving parts based on pumpingRod
+	
+	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth);
+//	backrectangle_def.type = b2_staticBody;
+	b2Body* firstStab = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.filter.groupIndex = -2;
+	newFixture.shape = &backrectangle_shape;
+	(*firstStab).CreateFixture(&newFixture);
+//This is for second stab
 
+	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - 1.5*stabbingWidth); //stabbingWidth is distance between bottom of big rectangle and first stab
+//	backrectangle_def.type = b2_staticBody;
+	b2Body* secondStab = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.filter.groupIndex = -2;
+	newFixture.shape = &backrectangle_shape;
+	(*secondStab).CreateFixture(&newFixture);
 
+//Now, the problem is to make them fixed to frontr
+	
+	big_back_def1.Initialize(firstStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth));
+	(*m_world).CreateJoint(&big_back_def1);
 
+//Now, fixing the second stab
+	big_back_def1.Initialize(secondStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - 1.5*stabbingWidth));
+	(*m_world).CreateJoint(&big_back_def1);
 
  	}
  	 sim_t *sim = new sim_t("Dominos", dominos_t::create);
