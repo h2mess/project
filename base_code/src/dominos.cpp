@@ -50,7 +50,7 @@ namespace cs296
 	float pebbleWidth = 2;
 	float wheelRadius = 6;
 	float gap = wheelRadius*3;//this is gap between centers of wheels
-	float firstWheelCenterx = 0;//this is x position of center of first wheel
+	float firstWheelCenterx = -10;//this is x position of center of first wheel
 	float rodWidth = 1;
 	float density = 1;
 	float pi = 3.14159;
@@ -60,10 +60,12 @@ namespace cs296
 	float x_bigrectangle = firstWheelCenterx + wheelRadius*3;
 	float y_bigrectangle = groundHeight + wheelRadius*2 + breadth_bigrectangle-2;
 	float length_backrectangle = 8;
-	float breadth_backrectangle = breadth_bigrectangle + wheelRadius/2;
+	float breadth_backrectangle = breadth_bigrectangle + wheelRadius/2;
 	float x_backrectangle = x_bigrectangle - length_bigrectangle - length_backrectangle;
 	float y_backrectangle = y_bigrectangle-wheelRadius/2;
 	float height_exhaust = wheelRadius;
+	float frontWidth = length_backrectangle -0;
+	float frontHeight = (breadth_backrectangle - breadth_bigrectangle)*2;
   dominos_t::dominos_t()
   {
 /*	  void keyboard(unsigned char key){
@@ -246,8 +248,8 @@ namespace cs296
 
 	//realm of back rectangle
 
-		b2PolygonShape backrectangle_shape;
-	backrectangle_shape.SetAsBox(length_backrectangle,breadth_backrectangle);
+	b2PolygonShape backrectangle_shape;
+	backrectangle_shape.SetAsBox(length_backrectangle,breadth_backrectangle);
 	b2BodyDef backrectangle_def;
 	backrectangle_def.type = b2_dynamicBody;
 	backrectangle_def.position.Set(x_backrectangle,y_backrectangle);
@@ -264,8 +266,8 @@ namespace cs296
 	
 	b2Vec2 big_back_point1;
 	big_back_point1.Set(x_backrectangle+length_backrectangle,y_backrectangle+breadth_backrectangle);
-	b2RevoluteJointDef big_back_def1;
-	big_back_def1.Initialize(bigrectangle_body,backrectangle_body,big_back_point1);
+	b2RevoluteJointDef big_back_def1;
+	big_back_def1.Initialize(bigrectangle_body,backrectangle_body,big_back_point1);
 	m_world->CreateJoint(&big_back_def1);
 	
 	b2Vec2 big_back_point2;
@@ -304,7 +306,7 @@ namespace cs296
 
 	// Joint to connect back circle
 	b2RevoluteJointDef sc_back_def;
-	sc_back_def.Initialize(backrectangle_body,smallcircle_body1,smallcircle_body1->GetPosition());
+	sc_back_def.Initialize(backrectangle_body,smallcircle_body1,smallcircle_body1->GetPosition());
 	m_world->CreateJoint(&sc_back_def);
 	//Mahindar code graciously ends=============================================================================================================
 	
@@ -315,26 +317,114 @@ namespace cs296
 	b2Body* exhaustBody = (*m_world).CreateBody(&bigrectangle_def);
 	(*exhaustBody).CreateFixture(&bigrectangle_fixture);
 	
-	////////////////////////////Test car ====================================================
-	b2PolygonShape chassis;
-			b2Vec2 vertices[8];
-			vertices[0].Set(-1.5f, -0.5f);
-			vertices[1].Set(1.5f, -0.5f);
-			vertices[2].Set(1.5f, 0.0f);
-			vertices[3].Set(0.0f, 0.9f);
-			vertices[4].Set(-1.15f, 0.9f);
-			vertices[5].Set(-1.5f, 0.2f);
-			chassis.Set(vertices, 6);
+	//..................................A new Start ....................................................
+	//This is for right side body ...................................................||||||||||||||||||||||||||||
+	backrectangle_shape.SetAsBox(rodWidth/2, breadth_backrectangle);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle);
+	b2FixtureDef newFixture ; //this fixture without that groupIndex thing
+	newFixture.shape = &backrectangle_shape;
+	newFixture.density = 1;
+	b2Body* frontl = (*m_world).CreateBody(&backrectangle_def);
+	(*frontl).CreateFixture(&newFixture);
+	/*//this makes the front left side of the front side
+	||					 ||
+	||this				 ||this is frontr
+	||is frontl	         ||
+	||--- box box box ---||
+	||^					 ||
+	||second height		 ||
+	||2fw/4	2fw/4	2fw/4||
+	||___	 _		____ ||
+	||___|	|_|		|____||
+	||^					 ||
+	|||					 ||
+	|||					 ||
+	|||					 ||
+	||frontheight		 ||
+	|||					 ||
+	|||					 ||
+	|||					 ||
+	||-__________________||
+	||___________________||
+		this is frontb*/
+	//this width is frontWidth (actually halfed)
+	//Here something the frontb
+	backrectangle_shape.SetAsBox(frontWidth, rodWidth/2); //even frontWidth is half the original value
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle-breadth_backrectangle + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	newFixture.density = 1;
+	b2Body* frontb = (*m_world).CreateBody(&backrectangle_def);
+	(*frontb).CreateFixture(&newFixture);
+	//Once legend frontb is gone
 
-			b2CircleShape circle;
-			circle.m_radius = 0.4f;
+	// Here starts the frontr
+	backrectangle_shape.SetAsBox(rodWidth/2, breadth_backrectangle);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - rodWidth/2 + frontWidth*2, y_backrectangle);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* frontr = (*m_world).CreateBody(&backrectangle_def);
+	(*frontr).CreateFixture(&newFixture);
+	// Here ends the frontr
 
-			b2BodyDef bd;
-			bd.type = b2_dynamicBody;
-			bd.position.Set(0.0f, 1.0f);
-			b2Body* m_car = m_world->CreateBody(&bd);
-			m_car->CreateFixture(&chassis, 1.0f);
-	////////////////////////Test Car ==================================================
+	//Now the rule of weld joints starts
+	b2WeldJointDef weld;
+	weld.Initialize(frontl, frontb, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth/2));//, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth/2));
+	(*m_world).CreateJoint(&weld);
+	weld.Initialize(frontr, frontb, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*2 - rodWidth/2, y_backrectangle - breadth_backrectangle + rodWidth/2));//, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*2 - rodWidth/2, y_backrectangle - breadth_backrectangle + rodWidth/2));
+	(*m_world).CreateJoint(&weld);
+	//Weld Joint has solved the problem of this welding. Have to see how long it works
+	//Now starts the level which is frontHeight above the previous layer
+	//Now the left most one
+	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth/4, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* ofirst = (*m_world).CreateBody(&backrectangle_def);
+	(*ofirst).CreateFixture(&newFixture);
+	//left most one is over
+
+	//middle one
+	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* osecond = (*m_world).CreateBody(&backrectangle_def);
+	(*osecond).CreateFixture(&newFixture);
+	//middle one is over
+
+	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/4), y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* othird = (*m_world).CreateBody(&backrectangle_def);
+	(*othird).CreateFixture(&newFixture);
+
+	//now, we weld things by using distance joints
+	weld.Initialize(frontl, ofirst, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth*(3.0/2)+frontHeight));
+	(*m_world).CreateJoint(&weld);
+
+	weld.Initialize(frontr, othird, b2Vec2(x_bigrectangle+length_bigrectangle+2*frontWidth-rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth*(3.0/2)+frontHeight));
+	(*m_world).CreateJoint(&weld);
+	
+	//now, for the middle one we use distance joint because, we cannot afford to move it to weld
+
+	b2DistanceJointDef distance;
+	distance.Initialize(ofirst, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
+	(*m_world).CreateJoint(&distance);
+
+
+	distance.Initialize(othird, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + 2*frontWidth-frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(9.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
+	(*m_world).CreateJoint(&distance);
+
+//Distance joint is done.
+
+//Now, we have to fix the fontWindow to big rectangle
+	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle + breadth_backrectangle));
+	(*m_world).CreateJoint(&big_back_def1);
+	
+	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle - breadth_backrectangle));
+	(*m_world).CreateJoint(&big_back_def1);
+
+
+
+
+
 
  	}
  	 sim_t *sim = new sim_t("Dominos", dominos_t::create);
