@@ -46,7 +46,7 @@ namespace cs296
 	float screenWidth = 90; //This is used in main code. This is also half of what is used may be
 	float groundHeight = 0.5; //this is half of the ground height because, function doubles it
 	float pebbleHeight = groundHeight/2;//same as above. This is also half of it.
-	int pebbleNumber = 15;
+	int pebbleNumber = 15;//we have to change this with the pebble width. If we increase screenWidth, this doesn't work fine.
 	float pebbleWidth = 2;
 	float wheelRadius = 6;
 	float gap = wheelRadius*3;//this is gap between centers of wheels
@@ -68,6 +68,8 @@ namespace cs296
 	float frontHeight = (breadth_backrectangle - breadth_bigrectangle)*2;
 	float stabbingRodLength = 8;
 	float stabbingWidth = 2;
+	float intraStabberWidth = 1.5*stabbingWidth;
+	float stabberLength = 4;
   dominos_t::dominos_t()
   {
 /*	  void keyboard(unsigned char key){
@@ -445,8 +447,8 @@ namespace cs296
 //This is for second stab
 
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - 1.5*stabbingWidth); //stabbingWidth is distance between bottom of big rectangle and first stab
-//	backrectangle_def.type = b2_staticBody;
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth); //stabbingWidth is distance between bottom of big rectangle and first stab
+//	backrectangle_def.type = b2_staticBody; intraStabberWidth = 1.5*stabbingWidth;
 	b2Body* secondStab = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.filter.groupIndex = -2;
 	newFixture.shape = &backrectangle_shape;
@@ -458,9 +460,16 @@ namespace cs296
 	(*m_world).CreateJoint(&big_back_def1);
 
 //Now, fixing the second stab
-	big_back_def1.Initialize(secondStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - 1.5*stabbingWidth));
+	big_back_def1.Initialize(secondStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth));
 	(*m_world).CreateJoint(&big_back_def1);
 
+//Now comes the time for the actual ''stabber'' part
+	backrectangle_shape.SetAsBox(stabberLength/2, intraStabberWidth/2);
+	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2);
+	b2Body* stabber = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.filter.groupIndex = 0;
+	newFixture.shape = &backrectangle_shape;
+	(*stabber).CreateFixture(&newFixture);
  	}
  	 sim_t *sim = new sim_t("Dominos", dominos_t::create);
  }
