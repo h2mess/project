@@ -55,7 +55,7 @@ namespace cs296
 	float rodWidth = 1;
 	float density = 1;
 	float pi = 3.14159;
-	float length_bigrectangle = 4*wheelRadius + 3;
+	float length_bigrectangle = 5*wheelRadius + 3;
 	float breadth_bigrectangle = 10;
 	float modifier = 7;
 	float x_bigrectangle = firstWheelCenterx + wheelRadius*3;
@@ -69,10 +69,11 @@ namespace cs296
 	float height_exhaust = wheelRadius;
 	float frontWidth = length_backrectangle -0;
 	float frontHeight = (breadth_backrectangle - breadth_bigrectangle)*2;
-	float stabbingRodLength = 8;
+	float stabbingRodLength = 14;  //#testing
 	float stabbingWidth = 2;
-	float intraStabberWidth = 1.5*stabbingWidth;
+	float intraStabberWidth = 2*stabbingWidth;
 	float stabberLength = 4;
+//	float pushLength = 11; //this is the length of rod connecting pumpingRod and stabber
   dominos_t::dominos_t()
   {
 /*	  void keyboard(unsigned char key){
@@ -146,7 +147,8 @@ namespace cs296
 	otrodBodyDef.position.Set(firstWheelCenterx+(wheelRadius/2)+gap, wheelRadius*1.5+groundHeight);
 	b2Body* otrodBody = (*m_world).CreateBody(&otrodBodyDef);
 	b2FixtureDef otrodFixtureDef;
-	otrodFixtureDef.density = 5*density;
+//	otrodFixtureDef.density = 5*density;
+	otrodFixtureDef.density = 0; //#testing
 	otrodFixtureDef.filter.groupIndex = -2;
 	otrodFixtureDef.shape = &otrodShape;
 	(*otrodBody).CreateFixture(&otrodFixtureDef);
@@ -388,13 +390,20 @@ namespace cs296
 	
 	//..................................A new Start ....................................................
 	//This is for right side body ...................................................||||||||||||||||||||||||||||
-	backrectangle_shape.SetAsBox(rodWidth/2, breadth_backrectangle);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle);
+//	float whyco = y_backrectangle-breadth_backrectangle; //this is the rock bottom y coordinate of front side
+	float whyco = y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth/2 - rodWidth - frontHeight/2;
+	float exco = x_bigrectangle + length_bigrectangle; //this is x coordinate of rock left of front side
+	backrectangle_shape.SetAsBox(rodWidth/2, (y_bigrectangle + breadth_bigrectangle - whyco)/2);
+//	backrectangle_def.position.Set(exco + rodWidth/2, y_backrectangle);
+	backrectangle_def.position.Set(exco + rodWidth/2, (whyco + y_bigrectangle + breadth_bigrectangle)/2);
 	b2FixtureDef newFixture ; //this fixture without that groupIndex thing
+	newFixture.filter.groupIndex = -2;
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = 1;
+	newFixture.restitution = 0;          //#testing
 	b2Body* frontl = (*m_world).CreateBody(&backrectangle_def);
 	(*frontl).CreateFixture(&newFixture);
+	newFixture.restitution = 0;        //#testing
 	/*//this makes the front left side of the front side
 	||					 ||
 	||this				 ||this is frontr
@@ -402,7 +411,7 @@ namespace cs296
 	||--- box box box ---||
 	||^					 ||
 	||second height		 ||
-	||2fw/4	2fw/4	2fw/4||
+	||2fw/4	2fw/3	2fw/4||
 	||___	 _		____ ||
 	||___|	|_|		|____||
 	||^					 ||
@@ -419,16 +428,19 @@ namespace cs296
 	//this width is frontWidth (actually halfed)
 	//Here something the frontb
 	backrectangle_shape.SetAsBox(frontWidth, rodWidth/2); //even frontWidth is half the original value
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle-breadth_backrectangle + rodWidth/2);
+	backrectangle_def.position.Set(exco + frontWidth, whyco + rodWidth/2);
+	newFixture.filter.groupIndex = 0;
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = 1;
+	newFixture.friction = 0; //#testing
 	b2Body* frontb = (*m_world).CreateBody(&backrectangle_def);
 	(*frontb).CreateFixture(&newFixture);
+	newFixture.friction = 0;  //#testing
 	//Once legend frontb is gone
 
 	// Here starts the frontr
-	backrectangle_shape.SetAsBox(rodWidth/2, breadth_backrectangle);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - rodWidth/2 + frontWidth*2, y_backrectangle);
+	backrectangle_shape.SetAsBox(rodWidth/2, (y_bigrectangle + breadth_bigrectangle - whyco)/2);
+	backrectangle_def.position.Set(exco - rodWidth/2 + frontWidth*2, (whyco + y_bigrectangle + breadth_bigrectangle)/2);
 	newFixture.shape = &backrectangle_shape;
 	b2Body* frontr = (*m_world).CreateBody(&backrectangle_def);
 	(*frontr).CreateFixture(&newFixture);
@@ -436,74 +448,87 @@ namespace cs296
 
 	//Now the rule of weld joints starts
 	b2WeldJointDef weld;
-	weld.Initialize(frontl, frontb, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth/2));//, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth/2));
+	weld.Initialize(frontl, frontb, b2Vec2(exco+rodWidth/2, whyco+rodWidth/2));//, b2Vec2(exco+rodWidth/2, whyco+rodWidth/2));
 	(*m_world).CreateJoint(&weld);
-	weld.Initialize(frontr, frontb, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*2 - rodWidth/2, y_backrectangle - breadth_backrectangle + rodWidth/2));//, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*2 - rodWidth/2, y_backrectangle - breadth_backrectangle + rodWidth/2));
+	weld.Initialize(frontr, frontb, b2Vec2(exco + frontWidth*2 - rodWidth/2, whyco + rodWidth/2));//, b2Vec2(exco + frontWidth*2 - rodWidth/2, whyco + rodWidth/2));
 	(*m_world).CreateJoint(&weld);
 	//Weld Joint has solved the problem of this welding. Have to see how long it works
 	//Now starts the level which is frontHeight above the previous layer
 	//Now the left most one
 	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth/4, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	backrectangle_def.position.Set(exco + frontWidth/4, whyco + rodWidth + frontHeight + rodWidth/2);
 	newFixture.shape = &backrectangle_shape;
 	b2Body* ofirst = (*m_world).CreateBody(&backrectangle_def);
 	(*ofirst).CreateFixture(&newFixture);
 	//left most one is over
 
 	//middle one
-	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	backrectangle_shape.SetAsBox(frontWidth/3, rodWidth/2);
+	backrectangle_def.position.Set(exco + frontWidth, whyco + rodWidth + frontHeight + rodWidth/2);
 	newFixture.shape = &backrectangle_shape;
 	b2Body* osecond = (*m_world).CreateBody(&backrectangle_def);
 	(*osecond).CreateFixture(&newFixture);
 	//middle one is over
 
+	b2PrismaticJointDef psjointtest;
+	psjointtest.bodyA = frontb;
+	psjointtest.bodyB = osecond;
+	psjointtest.localAxisA = b2Vec2(1,0);
+	psjointtest.localAnchorB = b2Vec2(0,0);
+	psjointtest.localAnchorA = b2Vec2(0, frontHeight + rodWidth);
+	(*m_world).CreateJoint(&psjointtest);
+// We nailed osecond Ho hoo ho!!
+// THis is after prismatic joint test
 	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/4), y_backrectangle - breadth_backrectangle + rodWidth + frontHeight + rodWidth/2);
+	backrectangle_def.position.Set(exco + frontWidth*(7.0/4), whyco + rodWidth + frontHeight + rodWidth/2);
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = 0;
 	b2Body* othird = (*m_world).CreateBody(&backrectangle_def);
 	(*othird).CreateFixture(&newFixture);
 
 	//now, we weld things by using distance joints
-	weld.Initialize(frontl, ofirst, b2Vec2(x_bigrectangle+length_bigrectangle+rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth*(3.0/2)+frontHeight));
+	weld.Initialize(frontl, ofirst, b2Vec2(exco+rodWidth/2, whyco+rodWidth*(3.0/2)+frontHeight));
 	(*m_world).CreateJoint(&weld);
 
-	weld.Initialize(frontr, othird, b2Vec2(x_bigrectangle+length_bigrectangle+2*frontWidth-rodWidth/2, y_backrectangle-breadth_backrectangle+rodWidth*(3.0/2)+frontHeight));
+	weld.Initialize(frontr, othird, b2Vec2(exco+2*frontWidth-rodWidth/2, whyco+rodWidth*(3.0/2)+frontHeight));
 	(*m_world).CreateJoint(&weld);
 	
 	//now, for the middle one we use distance joint because, we cannot afford to move it to weld
 
 	b2DistanceJointDef distance;
-	distance.Initialize(ofirst, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(7.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
+	distance.Initialize(ofirst, osecond, b2Vec2(exco + frontWidth/4, whyco + rodWidth*(3.0/2) + frontHeight), b2Vec2(exco + frontWidth*(7.0/8), whyco + rodWidth*(3.0/2) + frontHeight));
 	(*m_world).CreateJoint(&distance);
-	
+	//the problem with this distance joint is that it wobbles when the support of pumpingRod is gone. This causes big trouble
 
-	distance.Initialize(othird, osecond, b2Vec2(x_bigrectangle + length_bigrectangle + 2*frontWidth-frontWidth/4, y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight), b2Vec2(x_bigrectangle + length_bigrectangle + frontWidth*(9.0/8), y_backrectangle-breadth_backrectangle + rodWidth*(3.0/2) + frontHeight));
+	distance.Initialize(othird, osecond, b2Vec2(exco + 2*frontWidth-frontWidth/4, whyco + rodWidth*(3.0/2) + frontHeight), b2Vec2(exco + frontWidth*(9.0/8), whyco + rodWidth*(3.0/2) + frontHeight));
 	(*m_world).CreateJoint(&distance);
 
 //Distance joint is done.
 
 //Now, we have to fix the frontWindow to big rectangle
-	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle + breadth_backrectangle));
+	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(exco + rodWidth/2, y_backrectangle + breadth_backrectangle));
 	(*m_world).CreateJoint(&big_back_def1);
 	
-	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_backrectangle - breadth_backrectangle));
+	big_back_def1.Initialize(bigrectangle_body, frontl, b2Vec2(exco + rodWidth/2, whyco));
 	(*m_world).CreateJoint(&big_back_def1);
 	
 	//This is the pumpingRod
 
-
-	backrectangle_shape.SetAsBox(rodWidth/2, frontHeight/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle + frontWidth, y_backrectangle - breadth_backrectangle + rodWidth + frontHeight/2);
+	float lag = 0.1; //this is the difference between bottom of osecond and top of pumpingRod
+//	backrectangle_shape.SetAsBox(rodWidth, frontHeight/2); //changing this still causes trouble due to wobbling of osecond
+	float widthPR = rodWidth*2;  //this is the width of pumping rod
+	backrectangle_shape.SetAsBox(widthPR/2, (frontHeight- lag)/2); //take care of this width of this rod is double the original rodWidth
+	backrectangle_def.position.Set(exco + frontWidth*2 - rodWidth - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2); //in case of back trackingremove -lag term      //rodWidth and widthPR/2 makes the pumpingRod stay to its right most point
+	backrectangle_def.linearVelocity.Set(-10,0); //this is just for testing purposes #testing
 	newFixture.shape = &backrectangle_shape;
+	newFixture.restitution = 1;    //#testing for this to work we have to give the restitution to frontl also
 	b2Body* pumpingRod = (*m_world).CreateBody(&backrectangle_def);
 	(*pumpingRod).CreateFixture(&newFixture);
-	
+	newFixture.restitution = 0;     //#testing
 	//now, the moving parts based on pumpingRod
 	
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth);
+	backrectangle_def.position.Set(exco - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth);
 //	backrectangle_def.type = b2_staticBody;
 	b2Body* firstStab = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.filter.groupIndex = -2;
@@ -512,7 +537,7 @@ namespace cs296
 //This is for second stab
 
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth); //stabbingWidth is distance between bottom of big rectangle and first stab
+	backrectangle_def.position.Set(exco - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth); //stabbingWidth is distance between bottom of big rectangle and first stab
 //	backrectangle_def.type = b2_staticBody; intraStabberWidth = 1.5*stabbingWidth;
 	b2Body* secondStab = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.filter.groupIndex = -2;
@@ -521,24 +546,74 @@ namespace cs296
 
 //Now, the problem is to make them fixed to frontr
 	
-	big_back_def1.Initialize(firstStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth));
+	big_back_def1.Initialize(firstStab, frontl, b2Vec2(exco + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth));
 	(*m_world).CreateJoint(&big_back_def1);
 
 //Now, fixing the second stab
-	big_back_def1.Initialize(secondStab, frontl, b2Vec2(x_bigrectangle + length_bigrectangle + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth));
+	big_back_def1.Initialize(secondStab, frontl, b2Vec2(exco + rodWidth/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth));
 	(*m_world).CreateJoint(&big_back_def1);
+/*
+_______________________________________________________________________________________________________this is bottom of big rectangle
+                                                                                      |
+ __________________________________________________________________                   |  this distance is stabberWidth
+|__________________________________________________________________|---------------------------------
+                                                                                      |
+ __________________________________________________________________                   |  this is intraStabberWidth
+|__________________________________________________________________|----------------------------------
 
+......................................................................................................................................
+
+                       | |
+__________             | |
+| stabber |____________| |
+|         |_pusher_____| |this is pumping rod
+|_________|            | |
+                       | |
+
+..................................................................................................................................
+ 
+ */
 //Now comes the time for the actual ''stabber'' part
-	backrectangle_shape.SetAsBox(stabberLength/2, intraStabberWidth/2);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - intraStabberWidth/2);
+	float stabberLag = 0.2;
+	backrectangle_shape.SetAsBox(stabberLength/2, (intraStabberWidth - rodWidth)/2);
+	backrectangle_def.position.Set(exco -  stabberLength/2/* - rodWidth/2 - stabbingRodLength/2 + rodWidth*/, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2);
 	b2Body* stabber = (*m_world).CreateBody(&backrectangle_def);
-	newFixture.filter.groupIndex = 0;
+//	newFixture.filter.groupIndex = 0;
 	newFixture.shape = &backrectangle_shape;
 	(*stabber).CreateFixture(&newFixture);
+//Now, after this, we have to make sure that the stabber moves only between the stabs. So, we can use prismatic joint
+	//This is construction of prismatic joint
+	b2PrismaticJointDef psjoint;
+	psjoint.bodyA = firstStab;
+	psjoint.bodyB = stabber;
+	psjoint.localAxisA = b2Vec2(1,0);
+	psjoint.localAnchorB = b2Vec2(0,0);
+	psjoint.localAnchorA = b2Vec2(0,- intraStabberWidth/2);
+	(*m_world).CreateJoint(&psjoint);
+//I suspect there is something wrong. It is not at all moving
+//Now, a rod between stabber and the pumping rod
+	float pushLength = (*pumpingRod).GetWorldCenter().x - (*stabber).GetWorldCenter().x; //By this, pusher has both its end points at centers of pumpingRod and stabber. 
+	backrectangle_shape.SetAsBox(pushLength/2, rodWidth/2);
+	//backrectangle_def.position.Set(exco + frontWidth + rodWidth/2 - pushLength/2, whyco + rodWidth + frontHeight/2);//this is original line
+	backrectangle_def.position.Set(((*pumpingRod).GetWorldCenter().x + (*stabber).GetWorldCenter().x)/2, whyco + rodWidth + frontHeight/2);
+	b2Body* pusher = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.filter.groupIndex = -2;
+	newFixture.shape = &backrectangle_shape;
+	newFixture.density = 1;
+	(*pusher).CreateFixture(&newFixture);
+//Now welding that rod and pumpingRod. pusher is the name of 'that rod'
 
+	weld.Initialize(pusher, pumpingRod, b2Vec2(exco + frontWidth, whyco + rodWidth + frontHeight/2));
+	(*m_world).CreateJoint(&weld);
+	weld.Initialize(pusher, stabber, (*stabber).GetWorldCenter());
+	(*m_world).CreateJoint(&weld);
+
+//Now joining stabber and pusher
+	weld.Initialize(pusher, stabber, b2Vec2(exco - stabberLength/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth - rodWidth)/2));
+	(*m_world).CreateJoint(&weld);
 
 ///////////////////////////////////////////////////////////Monday Morning//////////////////////////////////////////////////////////////////////////////
-
+/*
 	b2Vec2 stabber_centre;
 	stabber_centre = stabber->GetPosition();
 	//b2PolygonShape stabber_initialjoint_shape;
@@ -576,8 +651,8 @@ namespace cs296
 	(*m_world).CreateJoint(&big_back_def1);
 
 
-	otrodShape.SetAsBox(rodWidth/2,(wheelRadius/4)*sqrt(2)+0.75);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75, groundHeight+wheelRadius*(1+(1.0/4)));
+	otrodShape.SetAsBox(rodWidth/2,(wheelRadius/16)*sqrt(2)+1.2);
+	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75, groundHeight+wheelRadius*(1+(1.0/4))+0.75);
 	otrodBodyDef.angle = -5*pi/15; //angle is clockwise by default
 	b2Body* holyrodBody1 = (*m_world).CreateBody(&otrodBodyDef);
 //	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
@@ -593,9 +668,9 @@ namespace cs296
 
 
 
-	float length = (wheelRadius/4)*sqrt(2)+0.75;
-	otrodShape.SetAsBox(wheelRadius+1.8,rodWidth/2);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6,groundHeight+wheelRadius*(1+(1.0/4))-length*sin(pi/3)+1);
+	float length = (wheelRadius/16)*sqrt(2)+1.2;
+	otrodShape.SetAsBox(wheelRadius+1,rodWidth/2);
+	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6,groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
 	otrodBodyDef.angle = 0;
 	b2Body* holyrodBody2 = (*m_world).CreateBody(&otrodBodyDef);
 	otrodFixtureDef.shape = &otrodShape;
@@ -604,16 +679,16 @@ namespace cs296
 
 	
 	b2Vec2 point_holy2;
-	point_holy2.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))-length*sin(pi/3)+1);
+	point_holy2.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
 	big_back_def1.Initialize(holyrodBody1,holyrodBody2,point_holy2);
 	(*m_world).CreateJoint(&big_back_def1);
 
 
 
 
-
-	otrodShape.SetAsBox(rodWidth/2,6);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8 + 6*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))-length*sin(pi/3)+1+6*cos(pi/6));
+	float length_holyrod3 = 4;
+	otrodShape.SetAsBox(rodWidth/2,length_holyrod3);
+	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8 + length_holyrod3*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1+length_holyrod3*cos(pi/6));
 	otrodBodyDef.angle = -pi/6; //angle is clockwise by default
 	b2Body* holyrodBody3 = (*m_world).CreateBody(&otrodBodyDef);
 //	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
@@ -622,21 +697,20 @@ namespace cs296
 	(*holyrodBody3).CreateFixture(&otrodFixtureDef);
 
 	b2Vec2 point_holy3;
-	point_holy3.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8,groundHeight+wheelRadius*(1+(1.0/4))-length*sin(pi/3)+1);
+	point_holy3.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8,groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
 	big_back_def1.Initialize(holyrodBody2,holyrodBody3,point_holy3);
 	(*m_world).CreateJoint(&big_back_def1);
 
 
 	b2Vec2 point_holy4;
-	point_holy4.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8+12*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))-length*sin(pi/3)+1+12*cos(pi/6));
+	point_holy4.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8+length_holyrod3*2*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1+length_holyrod3*2*cos(pi/6));
 	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
 	(*m_world).CreateJoint(&big_back_def1);
 
 
+///////////////////////end of monday code .........................................................................
 
-
-
-
+*/
 
 
 
