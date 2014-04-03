@@ -34,6 +34,7 @@
 #endif
 
 #include <cstring>
+#include<iostream>
 using namespace std;
 
 #include "dominos.hpp"
@@ -51,7 +52,7 @@ namespace cs296
 	float pebbleWidth = 2;
 	float wheelRadius = 6;
 	float gap = wheelRadius*3;//this is gap between centers of wheels
-	float firstWheelCenterx = -10;//this is x position of center of first wheel
+	float firstWheelCenterx = -20;//this is x position of center of first wheel
 	float rodWidth = 1;
 	float density = 1;
 	float pi = 3.14159;
@@ -528,6 +529,7 @@ namespace cs296
 	b2Body* pumpingRod = (*m_world).CreateBody(&backrectangle_def);
 	(*pumpingRod).CreateFixture(&newFixture);
 	newFixture.restitution = 0;     //#testing
+	backrectangle_def.linearVelocity.Set(0,0);
 	//now, the moving parts based on pumpingRod
 	
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
@@ -577,9 +579,9 @@ __________             | |
  
  */
 //Now comes the time for the actual ''stabber'' part
-	float stabberLag = 0.2;
+	float stabberLag = 0.6; //this is the difference of x co ordinate of left end of frontl and right end of frontr
 	backrectangle_shape.SetAsBox(stabberLength/2, (intraStabberWidth - rodWidth)/2);
-	backrectangle_def.position.Set(exco -  stabberLength/2/* - rodWidth/2 - stabbingRodLength/2 + rodWidth*/, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2);
+	backrectangle_def.position.Set(exco -  stabberLength/2 - stabberLag/* - rodWidth/2 - stabbingRodLength/2 + rodWidth*/, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2);
 	b2Body* stabber = (*m_world).CreateBody(&backrectangle_def);
 //	newFixture.filter.groupIndex = 0;
 	newFixture.shape = &backrectangle_shape;
@@ -616,6 +618,49 @@ __________             | |
 //Now joining stabber and pusher
 	weld.Initialize(pusher, stabber, b2Vec2(exco - stabberLength/2, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth - rodWidth)/2));
 	(*m_world).CreateJoint(&weld);
+/*//Let's start second level in front part
+	|  2fw/             |
+	|________   ________|
+	|________   ________|
+	|	  |		  |		|
+	|	  |		  |		|   this height is secondHeight
+	|	  |		  |		|
+	|____ |_______| ____|
+	|____  _______  ____|
+	|
+	|	
+*/
+	float secondHeight = frontHeight/2;
+	float holeWidth = 2*frontWidth/6.0; //this is the width of hole at the second level.
+	float sLength = (2*frontWidth - holeWidth)/2; //this is length of a plate at second level
+	backrectangle_shape.SetAsBox(sLength/2, rodWidth/2);
+	backrectangle_def.position.Set(exco + sLength/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight + rodWidth/2);
+	b2Body* sfirst = (*m_world).CreateBody(&backrectangle_def);
+	//cout << newFixture.filter.groupIndex << endl;
+	newFixture.filter.groupIndex = 0;
+	newFixture.shape = &backrectangle_shape;
+	(*sfirst).CreateFixture(&newFixture);
+	//So, there comes an end to the creation of sfirst
+
+	//Now, the creation of ssecond
+	backrectangle_def.position.Set(exco + 2*frontWidth - sLength/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight + rodWidth/2);
+	b2Body* ssecond = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.shape = &backrectangle_shape;
+	(*ssecond).CreateFixture(&newFixture);
+	//Ok, ssecond is also done. Now, joining them to frontl and frontr is remaining
+	//creation of joint between sfirst and frontl
+	weld.Initialize(frontl, sfirst, b2Vec2(exco + rodWidth/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight + rodWidth/2));
+	(*m_world).CreateJoint(&weld);
+	//Now, the creation of joint between ssecond and frontr
+	weld.Initialize(frontr, ssecond, b2Vec2(exco + frontWidth*2 - rodWidth/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight + rodWidth/2));
+	(*m_world).CreateJoint(&weld);
+	//Now a weird name is being introed
+	//Name of object between first and second floors is pulley Ideally, its length should be 5*(2fw)/12, but 2fw/2 would be better I guess
+	backrectangle_shape.SetAsBox(frontWidth/2, secondHeight/2);
+	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+	b2Body* pulley = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.shape = &backrectangle_shape;
+	(*pulley).CreateFixture(&newFixture);
 
 ///////////////////////////////////////////////////////////Monday Morning//////////////////////////////////////////////////////////////////////////////
 /*
