@@ -55,14 +55,15 @@ namespace cs296
 	float rodWidth = 1;
 	float density = 1;
 	float pi = 3.14159;
-	float length_bigrectangle = 5*wheelRadius + 3;
+	float length_bigrectangle = 4*wheelRadius + 6;
 	float breadth_bigrectangle = 10;
 	float modifier = 7;
-	float x_bigrectangle = firstWheelCenterx + wheelRadius*3;
+	float x_bigrectangle = firstWheelCenterx + wheelRadius*3 + 3;
 	float y_bigrectangle = groundHeight + wheelRadius*2 + breadth_bigrectangle-2;
+	//float x_bigrectangle_var = 2.5;
 	float length_backrectangle = 8;
 	float breadth_backrectangle = breadth_bigrectangle + wheelRadius/2;
-	float x_backrectangle = x_bigrectangle - length_bigrectangle - length_backrectangle;
+	float x_backrectangle = x_bigrectangle - length_bigrectangle - length_backrectangle ;
 
 	float y_backrectangle = y_bigrectangle-wheelRadius/2;
 
@@ -240,7 +241,7 @@ namespace cs296
 
 	b2BodyDef bigrectangle_def;
 	bigrectangle_def.type = b2_dynamicBody;
-	bigrectangle_def.position.Set(x_bigrectangle,y_bigrectangle);
+	bigrectangle_def.position.Set(x_bigrectangle , y_bigrectangle);
 	b2Body* bigrectangle_body = (*m_world).CreateBody(&bigrectangle_def);
 
 	b2FixtureDef bigrectangle_fixture;
@@ -400,7 +401,7 @@ namespace cs296
 	newFixture.filter.groupIndex = -2;
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = 1;
-	newFixture.restitution = 0;          //#testing
+	newFixture.restitution = 1;          //#testing
 	b2Body* frontl = (*m_world).CreateBody(&backrectangle_def);
 	(*frontl).CreateFixture(&newFixture);
 	newFixture.restitution = 0;        //#testing
@@ -442,8 +443,10 @@ namespace cs296
 	backrectangle_shape.SetAsBox(rodWidth/2, (y_bigrectangle + breadth_bigrectangle - whyco)/2);
 	backrectangle_def.position.Set(exco - rodWidth/2 + frontWidth*2, (whyco + y_bigrectangle + breadth_bigrectangle)/2);
 	newFixture.shape = &backrectangle_shape;
+	newFixture.restitution = 1;
 	b2Body* frontr = (*m_world).CreateBody(&backrectangle_def);
 	(*frontr).CreateFixture(&newFixture);
+	newFixture.restitution = 0;
 	// Here ends the frontr
 
 	//Now the rule of weld joints starts
@@ -516,7 +519,7 @@ namespace cs296
 
 	float lag = 0.1; //this is the difference between bottom of osecond and top of pumpingRod
 //	backrectangle_shape.SetAsBox(rodWidth, frontHeight/2); //changing this still causes trouble due to wobbling of osecond
-	float widthPR = rodWidth*2;  //this is the width of pumping rod
+	float widthPR = rodWidth*5; //this is the width of pumping rod
 	backrectangle_shape.SetAsBox(widthPR/2, (frontHeight- lag)/2); //take care of this width of this rod is double the original rodWidth
 	backrectangle_def.position.Set(exco + frontWidth*2 - rodWidth - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2); //in case of back trackingremove -lag term      //rodWidth and widthPR/2 makes the pumpingRod stay to its right most point
 	backrectangle_def.linearVelocity.Set(-10,0); //this is just for testing purposes #testing
@@ -580,7 +583,9 @@ __________             | |
 	b2Body* stabber = (*m_world).CreateBody(&backrectangle_def);
 //	newFixture.filter.groupIndex = 0;
 	newFixture.shape = &backrectangle_shape;
+	newFixture.restitution = 1;  //this had the default of 0
 	(*stabber).CreateFixture(&newFixture);
+	newFixture.restitution = 0;
 //Now, after this, we have to make sure that the stabber moves only between the stabs. So, we can use prismatic joint
 	//This is construction of prismatic joint
 	b2PrismaticJointDef psjoint;
