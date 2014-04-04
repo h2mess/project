@@ -150,10 +150,11 @@ namespace cs296
 	b2Body* otrodBody = (*m_world).CreateBody(&otrodBodyDef);
 	b2FixtureDef otrodFixtureDef;
 //	otrodFixtureDef.density = 5*density;
-	otrodFixtureDef.density = 5; //#testing
+	otrodFixtureDef.density = 10; //#testing
 	otrodFixtureDef.filter.groupIndex = -2;
 	otrodFixtureDef.shape = &otrodShape;
 	(*otrodBody).CreateFixture(&otrodFixtureDef);
+	otrodFixtureDef.density = 1;
 	//This completes the rod between one and three 'd wheels
 
 
@@ -192,12 +193,12 @@ namespace cs296
 	orJointDef.localAnchorA.Set(0,0);
 	orJointDef.localAnchorB.Set(-wheelRadius/4,-wheelRadius/4);
 	(b2RevoluteJoint*) m_world->CreateJoint(&orJointDef);*/
-	orJointDef.enableMotor = true;
-	orJointDef.maxMotorTorque = 10;
-	orJointDef.motorSpeed = 10;
 	orJointDef.Initialize(wheelBody2, holyrodBody, (*wheelBody2).GetPosition());
+//	orJointDef.motorSpeed = 2000.0f;
+//	orJointDef.maxMotorTorque = 400.0f;
+//	orJointDef.enableMotor = true;
 	(*m_world).CreateJoint(&orJointDef);
-	orJointDef.enableMotor = false;	
+//	orJointDef.enableMotor = false;	
 /*	orJointDef.localAnchorA.Set(wheelRadius/2,wheelRadius/2);
 	orJointDef.localAnchorB.Set(wheelRadius/4,wheelRadius/4);
 	(b2RevoluteJoint*) (*m_world).CreateJoint(&orJointDef);*/
@@ -808,106 +809,21 @@ __________             | |
 	(*m_world).CreateJoint(&orJointDef);
 
 
+	//creating a third level containing gas particles
+	float thirdHeight = 2*secondHeight;
+	backrectangle_shape.SetAsBox(frontWidth, rodWidth/2);
+	backrectangle_def.position.Set(exco + frontWidth, whyco + rodWidth + frontHeight + rodWidth + secondHeight + rodWidth + thirdHeight + rodWidth/2);
+	newFixture.density = density;
+	b2Body* enclosure = (*m_world).CreateBody(&backrectangle_def);
+	(*enclosure).CreateFixture(&newFixture);
 
-///////////////////////////////////////////////////////////Monday Morning//////////////////////////////////////////////////////////////////////////////
-/*
-	b2Vec2 stabber_ceorJointDef;
-	stabber_centre = stabber->GetPosition();
-	//b2PolygonShape stabber_initialjoint_shape;
-	b2Vec2  stabber_initialjoint_vertices[4];
-	float x_stabber_intialjoint1 = firstWheelCenterx+gap+wheelRadius/2 ;
-	float x_stabber_intialjoint2 = x_bigrectangle + length_bigrectangle - stabbingRodLength/2;
-	float y_stabber_intialjoint1 = groundHeight+wheelRadius*(1+(1.0/2));
-	float y_stabber_intialjoint2 = y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2;
-	stabber_initialjoint_vertices[0].Set(firstWheelCenterx+gap+wheelRadius/2 + 0.4, groundHeight+wheelRadius*(1+(1.0/2))+0.4);
-	stabber_initialjoint_vertices[1].Set(firstWheelCenterx+gap+wheelRadius/2 - 0.6, groundHeight+wheelRadius*(1+(1.0/2)) - 0.2);
-	stabber_initialjoint_vertices[2].Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 + 0.4, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 + 0.4);
-	stabber_initialjoint_vertices[3].Set(x_bigrectangle + length_bigrectangle - stabbingRodLength/2 - 0.6, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 - 0.2);
-	b2PolygonShape stabber_initialjoint_shape;
-	stabber_initialjoint_shape.Set(stabber_initialjoint_vertices,4);
-	b2BodyDef stabber_initialjoint_def;
-	//stabber_initialjoint_def.position.Set((x_stabber_intialjoint2+x_stabber_intialjoint1)/2,(y_stabber_intialjoint2+y_stabber_intialjoint1)/2);
-	stabber_initialjoint_def.type = b2_dynamicBody;
-	b2Body* stabber_initialjoint_body = (*m_world).CreateBody(&stabber_initialjoint_def);
+	//Now, welding it on left side
+	weld.Initialize(enclosure, frontl, b2Vec2((*frontl).GetWorldCenter().x, (*enclosure).GetWorldCenter().y));
+	(*m_world).CreateJoint(&weld);
+	//Now, welding on right side
+	weld.Initialize(enclosure, frontr, b2Vec2((*frontr).GetWorldCenter().x, (*enclosure).GetWorldCenter().y));
+	(*m_world).CreateJoint(&weld);
 
-	b2FixtureDef stabber_initialjoint_fixture;
-	stabber_initialjoint_fixture.density = 1.0;
-	stabber_initialjoint_fixture.filter.groupIndex = -2;
-	stabber_initialjoint_fixture.shape = &stabber_initialjoint_shape;
-	(*stabber_initialjoint_body).CreateFixture(&stabber_initialjoint_fixture);
-
-
-	b2Vec2 point_st_ij;
-	point_st_ij.Set(x_stabber_intialjoint2,y_stabber_intialjoint2);
-	big_back_def1.Initialize(stabber,stabber_initialjoint_body,stabber->GetPosition());
-	(*m_world).CreateJoint(&big_back_def1);
-
-	b2Vec2 point_st_ij1;
-	point_st_ij1.Set(x_stabber_intialjoint1,y_stabber_intialjoint1);
-	big_back_def1.Initialize(holyrodBody,stabber_initialjoint_body,point_st_ij1);
-	(*m_world).CreateJoint(&big_back_def1);
-
-
-	otrodShape.SetAsBox(rodWidth/2,(wheelRadius/16)*sqrt(2)+1.2);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75, groundHeight+wheelRadius*(1+(1.0/4))+0.75);
-	otrodBodyDef.angle = -5*pi/15; //angle is clockwise by default
-	b2Body* holyrodBody1 = (*m_world).CreateBody(&otrodBodyDef);
-//	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
-	otrodFixtureDef.shape = &otrodShape;
-	otrodFixtureDef.filter.groupIndex = -2;
-	(*holyrodBody1).CreateFixture(&otrodFixtureDef);
-
-	b2Vec2 point_holy1;
-	point_holy1.Set(x_stabber_intialjoint1,y_stabber_intialjoint1);
-	big_back_def1.Initialize(holyrodBody,holyrodBody1,point_holy1);
-	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-	float length = (wheelRadius/16)*sqrt(2)+1.2;
-	otrodShape.SetAsBox(wheelRadius+1,rodWidth/2);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6,groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
-	otrodBodyDef.angle = 0;
-	b2Body* holyrodBody2 = (*m_world).CreateBody(&otrodBodyDef);
-	otrodFixtureDef.shape = &otrodShape;
-	otrodFixtureDef.filter.groupIndex = -2;
-	(*holyrodBody2).CreateFixture(&otrodFixtureDef);
-
-	
-	b2Vec2 point_holy2;
-	point_holy2.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
-	big_back_def1.Initialize(holyrodBody1,holyrodBody2,point_holy2);
-	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-	float length_holyrod3 = 4;
-	otrodShape.SetAsBox(rodWidth/2,length_holyrod3);
-	otrodBodyDef.position.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8 + length_holyrod3*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1+length_holyrod3*cos(pi/6));
-	otrodBodyDef.angle = -pi/6; //angle is clockwise by default
-	b2Body* holyrodBody3 = (*m_world).CreateBody(&otrodBodyDef);
-//	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
-	otrodFixtureDef.shape = &otrodShape;
-	otrodFixtureDef.filter.groupIndex = -2;
-	(*holyrodBody3).CreateFixture(&otrodFixtureDef);
-
-	b2Vec2 point_holy3;
-	point_holy3.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8,groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1);
-	big_back_def1.Initialize(holyrodBody2,holyrodBody3,point_holy3);
-	(*m_world).CreateJoint(&big_back_def1);
-
-
-	b2Vec2 point_holy4;
-	point_holy4.Set(firstWheelCenterx+gap+0.75-length*cos(pi/3)+wheelRadius+0.6+wheelRadius+1.8+length_holyrod3*2*cos(pi/3),groundHeight+wheelRadius*(1+(1.0/4))+0.75-length*sin(pi/3)+1+length_holyrod3*2*cos(pi/6));
-	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
-	(*m_world).CreateJoint(&big_back_def1);
-
-
-///////////////////////end of monday code .........................................................................
-
-*/
 
 
 ///////////////////////////////////////////////////////////Monday Morning second wala//////////////////////////////////////////////////////////////////////////////
@@ -915,221 +831,75 @@ __________             | |
     //The rod between stabber and holyrod
 
 	b2Vec2 stabber_centre;
-
 	stabber_centre = stabber->GetPosition();
-
 	//b2PolygonShape stabber_initialjoint_shape;
-
 	b2Vec2  stabber_initialjoint_vertices[4];
-
 	float x_stabber_intialjoint1 = firstWheelCenterx+gap+wheelRadius/2 ;
-
 	float x_stabber_intialjoint2 = x_bigrectangle + length_bigrectangle - stabbingRodLength/2;
-
 	float y_stabber_intialjoint1 = groundHeight+wheelRadius*(1+(1.0/2));
-
 	float y_stabber_intialjoint2 = y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2;
-
 	stabber_initialjoint_vertices[0].Set(firstWheelCenterx+gap+wheelRadius/2 + 0.4, groundHeight+wheelRadius*(1+(1.0/2))+0.4);
-
 	stabber_initialjoint_vertices[1].Set(firstWheelCenterx+gap+wheelRadius/2 - 0.6, groundHeight+wheelRadius*(1+(1.0/2)) - 0.2);
-
 	stabber_initialjoint_vertices[2].Set(exco - stabberLag -stabberLength/2 + 0.4, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 + 0.4);
-
 	stabber_initialjoint_vertices[3].Set(exco - stabberLag - stabberLength/2 - 0.6, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 - 0.2);
-
 	b2PolygonShape stabber_initialjoint_shape;
-
 	stabber_initialjoint_shape.Set(stabber_initialjoint_vertices,4);
-
 	b2BodyDef stabber_initialjoint_def;
-
 	//stabber_initialjoint_def.position.Set((x_stabber_intialjoint2+x_stabber_intialjoint1)/2,(y_stabber_intialjoint2+y_stabber_intialjoint1)/2);
-
 	stabber_initialjoint_def.type = b2_dynamicBody;
-
 	b2Body* stabber_initialjoint_body = (*m_world).CreateBody(&stabber_initialjoint_def);
-
-
-
 	b2FixtureDef stabber_initialjoint_fixture;
-
-	stabber_initialjoint_fixture.density = 10.0;
-
+	stabber_initialjoint_fixture.density = 1.0;
 	stabber_initialjoint_fixture.filter.groupIndex = -2;
-
 	stabber_initialjoint_fixture.shape = &stabber_initialjoint_shape;
-
 	(*stabber_initialjoint_body).CreateFixture(&stabber_initialjoint_fixture);
-
-
-
-
-
 	b2Vec2 point_st_ij;
-
 	point_st_ij.Set(x_stabber_intialjoint2,y_stabber_intialjoint2);
-
 	big_back_def1.Initialize(stabber,stabber_initialjoint_body,stabber->GetPosition());
-
 	(*m_world).CreateJoint(&big_back_def1);
-
-
-
 	b2Vec2 point_st_ij1;
-
 	point_st_ij1.Set(x_stabber_intialjoint1,y_stabber_intialjoint1);
-
 	big_back_def1.Initialize(holyrodBody,stabber_initialjoint_body,point_st_ij1);
-
 	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-	
-
-	
-
-//	otrodShape.SetAsBox(rodWidth/2,(wheelRadius/18)*sqrt(2)+0.5);
-
-//	otrodBodyDef.position.Set(firstWheelCenterx+gap+var1, groundHeight+wheelRadius*(1+(1.0/4))+1.1);
-
-//	otrodBodyDef.angle = -5*pi/15; //angle is clockwise by default
-
-//	b2Body* holyrodBody1 = (*m_world).CreateBody(&otrodBodyDef);
-
-//	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
-
-//	otrodFixtureDef.shape = &otrodShape;
-
-//	otrodFixtureDef.filter.groupIndex = -2;
-
-//	(*holyrodBody1).CreateFixture(&otrodFixtureDef);
-
-
-
-//	b2Vec2 point_holy1;
-
-//	point_holy1.Set(x_stabber_intialjoint1,y_stabber_intialjoint1);
-
-//	big_back_def1.Initialize(holyrodBody,holyrodBody1,point_holy1);
-
-//	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-
-
-
-	//the horizontal smaller rod at holyrod joint 
-
-//	float length = 0;
-
 	float var1 = 3.0;
-
 	float x_holyrod2 = firstWheelCenterx+gap+wheelRadius/2+wheelRadius+var1;
-
 	otrodShape.SetAsBox(wheelRadius+var1,rodWidth/2);
-
 	otrodBodyDef.position.Set(x_holyrod2,groundHeight+wheelRadius*(1+(1.0/2)));
-
 	otrodBodyDef.angle = 0;
-
 	b2Body* holyrodBody2 = (*m_world).CreateBody(&otrodBodyDef);
-
 	otrodFixtureDef.shape = &otrodShape;
-
 	otrodFixtureDef.filter.groupIndex = -2;
-
 	(*holyrodBody2).CreateFixture(&otrodFixtureDef);
-
-
-
-	
-
 	b2Vec2 point_holy2;
-
 	point_holy2.Set(firstWheelCenterx+gap+wheelRadius/2,groundHeight+wheelRadius*(1+(1.0/2)));
-
 	big_back_def1.Initialize(holyrodBody,holyrodBody2,point_holy2);
-
 	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-
-
-
-
-
 	float length_holyrod3 = 3;
-
 	float angle = -pi/5;
-
 	float x_holyrod3 = x_holyrod2 + wheelRadius+var1+ length_holyrod3*sin(angle);
-
-	
-
 	otrodShape.SetAsBox(rodWidth/2,length_holyrod3);
-
 	otrodBodyDef.position.Set(x_holyrod3,groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*cos(-angle));
-
 	otrodBodyDef.angle = -angle; //angle is clockwise by default
-
 	b2Body* holyrodBody3 = (*m_world).CreateBody(&otrodBodyDef);
-
 //	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
-
 	otrodFixtureDef.shape = &otrodShape;
-
 	otrodFixtureDef.filter.groupIndex = -2;
-
 	(*holyrodBody3).CreateFixture(&otrodFixtureDef);
-
-
-
 	b2Vec2 point_holy3;
-
 	point_holy3.Set(firstWheelCenterx+gap+wheelRadius/2+wheelRadius+var1+wheelRadius+var1,groundHeight+wheelRadius*(1+(1.0/2)));
-
 	big_back_def1.Initialize(holyrodBody2,holyrodBody3,point_holy3);
-
 	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-
 	b2Vec2 point_holy4;
-
 	point_holy4.Set(x_holyrod3 + length_holyrod3*sin(angle),groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*2*cos(-angle));
-
 	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
-
 	(*m_world).CreateJoint(&big_back_def1);
-
-
-
-
-
 	//rod under Stabber
-
 	backrectangle_shape.SetAsBox(rodWidth/2,wheelRadius/4);
-
 	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabberLength/2,y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2 - wheelRadius/4);
-
 	//b2Body* stabber_holybody = (*m_world).CreateBody(&backrectangle_def);
-
 	newFixture.shape = &backrectangle_shape;
-
 	//(*stabber_holybody).CreateFixture(&newFixture);
-
-
-
 	//big_back_def1.Initialize(stabber,stabber_holybody,stabber->GetPosition());
-
 	//(*m_world).CreateJoint(&big_back_def1);
 	float length_LastRod_1 = 6;
 	b2PolygonShape LastRod_1_shape;
@@ -1152,20 +922,9 @@ __________             | |
 	point_hrb3_lr_1.Set(holyrodBody3->GetPosition().x + length_LastRod_1*2,holyrodBody3->GetPosition().y);
 	orJointDef.Initialize(rightrod,LastRod_1_body,point_hrb3_lr_1);
 	(*m_world).CreateJoint(&orJointDef);
-
-
-
-
-
-
 //	float_
 
 ///////////////////////end of monday code .........................................................................
-
-
-
-	
-
  	}
  	 sim_t *sim = new sim_t("Dominos", dominos_t::create);
  }
