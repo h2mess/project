@@ -7,7 +7,7 @@
 //! These are user defined include files
 //! Included in double quotes - the path to find these has to be given at compile time
 #include "callbacks.hpp"
-
+#include <iostream>
 #ifndef __APPLE__
 #include "GL/glui.h"
 #else
@@ -35,6 +35,7 @@ namespace cs296
   int tx, ty, tw, th;
   bool r_mouse_down;
   b2Vec2 lastp;
+  extern b2Body* pumpingRod;
 
   b2Vec2 callbacks_t::convert_screen_to_world(int32 x, int32 y)
   {
@@ -116,7 +117,15 @@ namespace cs296
     case 'p':
       settings.pause = !settings.pause;
       break;
-      
+     
+     case 'q':
+		std::cout<< "Done" << std::endl;
+		if(pumpingRod->GetLinearVelocity().x > 0){
+		pumpingRod->ApplyForce(b2Vec2(4000,0), pumpingRod->GetWorldCenter() ,true);}
+		//else if (pumpingRod->GetLinearVelocity().x < 0){
+		//pumpingRod->ApplyForce(b2Vec2(-4000,0), pumpingRod->GetWorldCenter() ,true);}
+		 break;
+     
       //! The default case. Why is this needed?
     default:
       if (test)

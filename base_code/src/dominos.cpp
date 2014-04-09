@@ -45,11 +45,10 @@ namespace cs296
    * This is the documentation block for the constructor.
    */ 
 //  float wheelRadius = 1;
+	b2Body* pumpingRod;
 	float screenWidth = 90; //This is used in main code. This is also half of what is used may be
 	float groundHeight = 0.5; //this is half of the ground height because, function doubles it
-	float pebbleHeight = groundHeight/2;//same as above. This is also half of it.
-	int pebbleNumber = 15;
-	float pebbleWidth = 2;
+	
 	float wheelRadius = 6;
 	float gap = wheelRadius*3;//this is gap between centers of wheels
 	float firstWheelCenterx = -20;//this is x position of center of first wheel
@@ -98,25 +97,15 @@ namespace cs296
     {
       
       b2PolygonShape groundShape; 
-      groundShape.SetAsBox(screenWidth,groundHeight);
+      groundShape.SetAsBox(4000,groundHeight);
       b2BodyDef bd; 
       b1 = m_world->CreateBody(&bd);
 	  b2FixtureDef groundFixtureDef;
 	  groundFixtureDef.shape = &groundShape;
 	  groundFixtureDef.friction = 0.5;
       b1->CreateFixture(&groundFixtureDef);
-	  b2BodyDef pebbleDef; //These brown rectangles at the bottom of picture are called pebbles
-	  b2PolygonShape pebbleShape;
-	  pebbleShape.SetAsBox(pebbleWidth,pebbleHeight);//
-	  b2Body* pebbles[pebbleNumber];
-	  pebbleDef.position.Set(-screenWidth,-groundHeight-pebbleHeight);
-	  for(int i=0;i<pebbleNumber;i++){
-		  pebbles[i] = (*m_world).CreateBody(&pebbleDef);
-		  pebbleDef.position.Set(-screenWidth+(i+1)*(2*screenWidth/pebbleNumber), -groundHeight-pebbleHeight);
-		 (*pebbles[i]).CreateFixture(&pebbleShape, 0.0f);
-	  }
-	  b2FixtureDef pebbleFixtureDef;
-	  pebbleFixtureDef.shape = &pebbleShape;
+	  
+	  
     }
         //upto here  
 	//Here starts remaking of wheel :P
@@ -411,8 +400,8 @@ namespace cs296
 	//Weld Joint has solved the problem of this welding. Have to see how long it works
 	//Now starts the level which is frontHeight above the previous layer
 	//Now the left most one
-	float ml = (2*frontWidth)/12 + 1;
-	float dl = (2*frontWidth)/6 -1;
+	float ml = (2*frontWidth)/12;
+	float dl = (2*frontWidth)/6;
 	float cl = (2*frontWidth)/2;
 	//we have to ensure that ml + dl + cl + dl + ml is equal to l i.e., 2*frontWidth
 	
@@ -522,11 +511,35 @@ namespace cs296
 	newFixture.shape = &backrectangle_shape;
 	newFixture.restitution = 1;    //#testing for this to work we have to give the restitution to frontl also
 	newFixture.density = density;
-	b2Body* pumpingRod = (*m_world).CreateBody(&backrectangle_def);
+	pumpingRod = (*m_world).CreateBody(&backrectangle_def);
 	(*pumpingRod).CreateFixture(&newFixture);
 	newFixture.restitution = 0;     //#testing
 	backrectangle_def.linearVelocity.Set(0,0);
 	newFixture.density = 0;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	//now, the moving parts based on pumpingRod
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	b2Vec2 co_middlepoint;
@@ -561,11 +574,6 @@ namespace cs296
 	(*m_world).CreateJoint(&jointDef2);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 	
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
 	backrectangle_def.position.Set(exco - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth);
@@ -696,10 +704,10 @@ __________             | |
 	(*m_world).CreateJoint(&orJointDef);
 	//Now a weird name is being introed
 	//Name of object between first and second floors is pulley Ideally, its length should be 5*(2fw)/12, but 2fw/2 would be better I guess
-//	backrectangle_shape.SetAsBox((cl+dl)/2, secondHeight/2);
-	backrectangle_shape.SetAsBox((cl+dl)/2, secondHeight/2);
-	//backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
-	backrectangle_def.position.Set(exco + ml + dl + (cl+dl)/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+	backrectangle_shape.SetAsBox((cl + dl)/2 - 0.5, secondHeight/2);
+//	backrectangle_shape.SetAsBox(3, secondHeight/2);
+	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+//	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
 	b2Body* pulley = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = density;
@@ -717,10 +725,6 @@ __________             | |
 	psjointtest.bodyB = pulley;
 	psjointtest.localAnchorA = b2Vec2((*pulley).GetWorldCenter().x - (*frontb).GetWorldCenter().x, (*pulley).GetWorldCenter().y - (*frontb).GetWorldCenter().y);
 	(*m_world).CreateJoint(&psjointtest);
-
-
-
-
 
 	//Now, the holder for the stabber
 	float holderHeight = (intraStabberWidth - rodWidth)*1.5; //this is same as width of stabber
@@ -750,14 +754,18 @@ __________             | |
 	newFixture.density = 0;
 	//fixing the lcircle to holder
 	orJointDef.Initialize(holder, lcircle, (*lcircle).GetWorldCenter());
+	orJointDef.enableLimit = true;
+	orJointDef.lowerAngle = 1;
+	orJointDef.upperAngle = 1;
 	(*m_world).CreateJoint(&orJointDef);
+	orJointDef.enableLimit = false;
 	//This is done
 	float ycoofpoint = y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth - rodWidth/2; //this is y coordinate of second lowest point initially
 	//Now, we have to create a new circle at an appropriate distance and connect them by a rod
 	//Now, first we create rod
 	float pointHeight = ycoofpoint - (*lcircle).GetWorldCenter().y; //this is height of second point wrt lcircle
 	//cout << pointHeight << endl;
-	float theta = 20;
+	float theta = 30;
 	float xcom = (*lcircle).GetWorldCenter().x + (pointHeight/tan(theta*pi/180))/2; //this is x coordinate of com of rod before rotating
 	float ycom = (*lcircle).GetWorldCenter().y + pointHeight/2;      //this is y coordinate of com of rod before rotating
 	float lcom = pointHeight/sin(theta*pi/180);
@@ -791,8 +799,15 @@ __________             | |
 	//Now, revolute joint between lcircle and lrod
 
 	orJointDef.Initialize(lcircle, lrod, (*lcircle).GetWorldCenter());
+//	orJointDef.enableLimit = true;
+//	float limit = theta/10; //this limit is in degrees.
+//	orJointDef.lowerAngle = -0.05;//limit*pi/180;
+//	orJointDef.upperAngle = 0.05;//limit*pi/180;
 	(*m_world).CreateJoint(&orJointDef);
-
+/*	cout << ar->IsLimitEnabled() << endl;
+	cout << ar->GetLowerLimit() << endl;
+	cout << ar->GetUpperLimit() << endl;*/
+	orJointDef.enableLimit = false;
 	//NOw, the case of two higher points. Let highest one be called hcircle and other one by hnextcircle
 
 	float alpha = 90 - theta;
@@ -829,6 +844,7 @@ __________             | |
 	//Now, we have to connect lnextcircle and rightrod
 	orJointDef.Initialize(rightrod, lnextcircle, (*lnextcircle).GetWorldCenter());
 	(*m_world).CreateJoint(&orJointDef);
+
 	//Here ends the that revolute joints too
 	//Now, we have to connect pulley to rightrod at the y height of center of pulley
 	xcom = (*lnextcircle).GetWorldCenter().x - ((*pulley).GetWorldCenter().y - (*lnextcircle).GetWorldCenter().y)/tan(alpha*pi/180);
@@ -925,8 +941,8 @@ __________             | |
 	/*! \section The Holy Rod3
 	* \brief It is the rod with some angle with horizontal to holyrod2
 	*/
-	float length_holyrod3 = 3;
-	float angle = -pi/5;
+	float length_holyrod3 = 5;
+	float angle = -pi/3;
 	float x_holyrod3 = x_holyrod2 + wheelRadius+var1+ length_holyrod3*sin(angle);
 	otrodShape.SetAsBox(rodWidth/2,length_holyrod3);
 	otrodBodyDef.position.Set(x_holyrod3,groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*cos(-angle));
@@ -936,14 +952,17 @@ __________             | |
 	otrodFixtureDef.shape = &otrodShape;
 	otrodFixtureDef.filter.groupIndex = -2;
 	(*holyrodBody3).CreateFixture(&otrodFixtureDef);
+	orJointDef.Initialize(holyrodBody3, bigrectangle_body, (*holyrodBody3).GetWorldCenter());
+	(*m_world).CreateJoint(&orJointDef);
+
 	b2Vec2 point_holy3;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of holyrod2's end
 	point_holy3.Set(firstWheelCenterx+gap+wheelRadius/2+wheelRadius+var1+wheelRadius+var1,groundHeight+wheelRadius*(1+(1.0/2)));
 	big_back_def1.Initialize(holyrodBody2,holyrodBody3,point_holy3);
 	(*m_world).CreateJoint(&big_back_def1);
 	b2Vec2 point_holy4;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of top end of holyrod4's end
 	point_holy4.Set(x_holyrod3 + length_holyrod3*sin(angle),groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*2*cos(-angle));
-	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
-	(*m_world).CreateJoint(&big_back_def1);
+//	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
+//	(*m_world).CreateJoint(&big_back_def1);
 	
 
 
@@ -951,12 +970,12 @@ __________             | |
 	/*! \section The Last Rod
 	* \brief It connects the right rod and the holyrod3
 	*/
-	float length_LastRod_1 = 6; //! \b Type : \b float .It has the length of the Last Rod
+	float length_LastRod_1 = 5.5; //! \b Type : \b float .It has the length of the Last Rod
 	b2PolygonShape LastRod_1_shape;//!< \b Type : \b b2PolygonShape. It helps us in creating Polygon shapes (convex)
 	LastRod_1_shape.SetAsBox(length_LastRod_1,smallWidth/2);
 	b2BodyDef LastRod_1_def;//!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
 	LastRod_1_def.type = b2_dynamicBody;
-	LastRod_1_def.position.Set(holyrodBody3->GetPosition().x + length_LastRod_1,holyrodBody3->GetPosition().y);
+	LastRod_1_def.position.Set(connector->GetPosition().x -((*pulley).GetWorldCenter().x - xcom)/2 - length_LastRod_1,connector->GetPosition().y);
 	//LastRod_1_def.shape = &LastRod_1_shape;
 	b2Body* LastRod_1_body = (*m_world).CreateBody(&LastRod_1_def);//!< Body of Last Rod
 	b2FixtureDef LastRod_1_fixture; //!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
@@ -964,12 +983,13 @@ __________             | |
 	LastRod_1_fixture.density = density;
 	LastRod_1_fixture.filter.groupIndex = -2;
 	(*LastRod_1_body).CreateFixture(&LastRod_1_fixture);
-
-	orJointDef.Initialize(holyrodBody3,LastRod_1_body,holyrodBody3->GetPosition());
+	b2Vec2 point_hrb3_lr_1;
+	point_hrb3_lr_1.Set(LastRod_1_body->GetPosition().x-length_LastRod_1,LastRod_1_body->GetPosition().y);
+	orJointDef.Initialize(holyrodBody3,LastRod_1_body,point_hrb3_lr_1);
 	(*m_world).CreateJoint(&orJointDef);
 
-	b2Vec2 point_hrb3_lr_1;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of Last Rod 's end
-	point_hrb3_lr_1.Set(holyrodBody3->GetPosition().x + length_LastRod_1*2,holyrodBody3->GetPosition().y);
+	//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of Last Rod 's end
+	point_hrb3_lr_1.Set(connector->GetPosition().x -((*pulley).GetWorldCenter().x - xcom)/2,connector->GetPosition().y);
 	orJointDef.Initialize(rightrod,LastRod_1_body,point_hrb3_lr_1);
 	(*m_world).CreateJoint(&orJointDef);
 //	float_

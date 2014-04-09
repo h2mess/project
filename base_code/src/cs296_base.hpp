@@ -29,7 +29,7 @@
 #include "render.hpp"
 #include <Box2D/Box2D.h>
 #include <cstdlib>
-#include<iostream>
+
 #define	RAND_LIMIT 32767
 
 namespace cs296
@@ -164,7 +164,7 @@ namespace cs296
 
     virtual void keyboard(unsigned char key) { B2_NOT_USED(key); }
     virtual void keyboard_up(unsigned char key) { B2_NOT_USED(key); }
-	const b2World* get_world(){return m_world;}
+
     void shift_mouse_down(const b2Vec2& p) { B2_NOT_USED(p); }
     virtual void mouse_down(const b2Vec2& p) { B2_NOT_USED(p); }
     virtual void mouse_up(const b2Vec2& p) { B2_NOT_USED(p); }
@@ -175,12 +175,11 @@ namespace cs296
     virtual void joint_destroyed(b2Joint* joint) { B2_NOT_USED(joint); }
     
     // Callbacks for derived classes.
-    virtual void begin_contact(b2Contact* contact) { std::cout << "how about this" << std::endl;B2_NOT_USED(contact); }
+    virtual void begin_contact(b2Contact* contact) { B2_NOT_USED(contact); }
     virtual void end_contact(b2Contact* contact) { B2_NOT_USED(contact); }
-    virtual void PreSolve(b2Contact* contact, const b2Manifold* oldManifold);
+    virtual void pre_solve(b2Contact* contact, const b2Manifold* oldManifold);
     virtual void post_solve(const b2Contact* contact, const b2ContactImpulse* impulse)
     {
-		std::cout << "alsdhg" << std::endl;
       B2_NOT_USED(contact);
       B2_NOT_USED(impulse);
     }
