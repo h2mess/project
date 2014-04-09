@@ -175,11 +175,12 @@ namespace cs296
     virtual void joint_destroyed(b2Joint* joint) { B2_NOT_USED(joint); }
     
     // Callbacks for derived classes.
-    virtual void begin_contact(b2Contact* contact) { B2_NOT_USED(contact); }
-    virtual void end_contact(b2Contact* contact) { B2_NOT_USED(contact); }
-    virtual void pre_solve(b2Contact* contact, const b2Manifold* oldManifold);
-    virtual void post_solve(const b2Contact* contact, const b2ContactImpulse* impulse)
+    virtual void BeginContact(b2Contact* contact) { B2_NOT_USED(contact); }
+    virtual void EndContact(b2Contact* contact) {B2_NOT_USED(contact); }
+    virtual void PreSolve(b2Contact* contact, const b2Manifold* oldManifold);
+    virtual void PostSolve(const b2Contact* contact, const b2ContactImpulse* impulse)
     {
+//	  std::cout << "helsdhg" << std::endl;
       B2_NOT_USED(contact);
       B2_NOT_USED(impulse);
     }
@@ -200,9 +201,12 @@ namespace cs296
     b2World* m_world;//!< Pointer to the world
 
     int32 m_step_count;//!< Keeps count of no of steps
-    
+//    b2Body* pumpingRod;
     b2Profile m_max_profile;
     b2Profile m_total_profile;
+  public:
+	b2Body* pumpingRod;
+	b2Body* frontl;
   };
 }
 

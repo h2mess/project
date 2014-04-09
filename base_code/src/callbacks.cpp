@@ -120,7 +120,9 @@ namespace cs296
      
      case 'q':
 		std::cout<< "Done" << std::endl;
+		std::cout << (*pumpingRod).GetLinearVelocity().x << std::endl;
 		if(pumpingRod->GetLinearVelocity().x > 0){
+			std::cout << "alksdg" << std::endl;
 		pumpingRod->ApplyForce(b2Vec2(4000,0), pumpingRod->GetWorldCenter() ,true);}
 		//else if (pumpingRod->GetLinearVelocity().x < 0){
 		//pumpingRod->ApplyForce(b2Vec2(-4000,0), pumpingRod->GetWorldCenter() ,true);}

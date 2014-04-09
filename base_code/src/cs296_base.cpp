@@ -50,9 +50,29 @@ base_sim_t::~base_sim_t()
 	m_world = NULL;
 }
 
-void base_sim_t::pre_solve(b2Contact* contact, const b2Manifold* oldManifold)
+void base_sim_t::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 {
-  const b2Manifold* manifold = contact->GetManifold();
+//	std::cout << "this is entry point" << std::endl;
+	b2Fixture* af = (*contact).GetFixtureA();
+	b2Fixture* bf = (*contact).GetFixtureB();
+	b2Body* a = (*af).GetBody();
+	b2Body* b = (*bf).GetBody();
+//	if((*a).GetWorldCenter().x == (*pumpingRod).GetWorldCenter().x) std::cout << "roghadf" << endl;
+//	if((*b).GetWorldCenter().x == (*pumpingRod).GetWorldCenter().x) std::cout << "roghaasghdf" << endl;
+	if(a == pumpingRod){
+		bool positive = (*a).GetLinearVelocity().x  - (*frontl).GetLinearVelocity().x > 0;
+		bool validCollision = (positive && ((*a).GetWorldCenter().x -1 > (*b).GetWorldCenter().x)) || (!positive && ((*a).GetWorldCenter().x + 1 <= (*b).GetWorldCenter().x));
+		std::cout << "gone" << std::endl;
+		if(!validCollision) (*contact).SetEnabled(false);
+	}
+	if(b == pumpingRod){
+		bool positive = (*b).GetLinearVelocity().x - (*frontl).GetLinearVelocity().x> 0;
+		bool validCollision = (positive && ((*b).GetWorldCenter().x - 1 > (*a).GetWorldCenter().x)) || (!positive && ((*b).GetWorldCenter().x + 1 <= (*a).GetWorldCenter().x));
+
+		std::cout << "lsdkhg" << std::endl;
+		if(!validCollision) (*contact).SetEnabled(false);
+	}
+/*  const b2Manifold* manifold = contact->GetManifold();
   
   if (manifold->pointCount == 0)
     {
@@ -77,7 +97,7 @@ void base_sim_t::pre_solve(b2Contact* contact, const b2Manifold* oldManifold)
       cp->normal = world_manifold.normal;
       cp->state = state2[i];
       ++m_point_count;
-    }
+    }*/
 }
 
 void base_sim_t::draw_title(int x, int y, const char *string)
@@ -87,6 +107,7 @@ void base_sim_t::draw_title(int x, int y, const char *string)
 
 void base_sim_t::step(settings_t* settings)
 {
+//	std::cout << "hello" << std::endl;
   float32 time_step = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
 
   if (settings->pause)
