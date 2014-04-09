@@ -79,6 +79,12 @@ namespace cs296
 	float intraStabberWidth = 2*stabbingWidth;
 	float stabberLength = 4;
 //	float pushLength = 11; //this is the length of rod connecting pumpingRod and stabber
+// Now, we have to position things such that a + b + p + firstWheelCenterx + gap = exco + m + d + c. So, p must be some big expression.Since p depends on initial location of pumpingRod, we have to set it such that p gets the desired value
+	float whyco = y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth/2 - rodWidth - frontHeight/2;
+	float exco = x_bigrectangle + length_bigrectangle; //this is x coordinate of rock left of front side
+	float stabberLag = 2.6; //this is the difference of x co ordinate of left end of frontl and right end of frontr
+	float stabberx = exco - stabberLength/2 - stabberLag;
+	float stabbery = y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2;
   dominos_t::dominos_t()
   {
 /*	  void keyboard(unsigned char key){
@@ -321,10 +327,6 @@ namespace cs296
 	smallcircle_fixture.density = 1.0;
 	smallcircle_fixture.filter.groupIndex = -2;
 	(*smallcircle_body1).CreateFixture(&smallcircle_fixture);
-
-	
-
-
 	// Joint to connect back circle
 	b2RevoluteJointDef sc_back_def;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restrictsmotion of a bodyB w.r.t bodyA allowing only rotation
 	sc_back_def.Initialize(backrectangle_body,smallcircle_body1,smallcircle_body1->GetPosition());
@@ -343,8 +345,8 @@ namespace cs296
 	//..................................A new Start ....................................................
 	//This is for right side body ...................................................||||||||||||||||||||||||||||
 //	float whyco = y_backrectangle-breadth_backrectangle; //this is the rock bottom y coordinate of front side
-	float whyco = y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth/2 - rodWidth - frontHeight/2;
-	float exco = x_bigrectangle + length_bigrectangle; //this is x coordinate of rock left of front side
+//	float whyco = y_bigrectangle - breadth_bigrectangle - stabbingWidth - intraStabberWidth/2 - rodWidth - frontHeight/2;
+//	float exco = x_bigrectangle + length_bigrectangle; //this is x coordinate of rock left of front side
 	backrectangle_shape.SetAsBox(rodWidth/2, (y_bigrectangle + breadth_bigrectangle - whyco)/2);
 //	backrectangle_def.position.Set(exco + rodWidth/2, y_backrectangle);
 	backrectangle_def.position.Set(exco + rodWidth/2, (whyco + y_bigrectangle + breadth_bigrectangle)/2);
@@ -409,8 +411,8 @@ namespace cs296
 	//Weld Joint has solved the problem of this welding. Have to see how long it works
 	//Now starts the level which is frontHeight above the previous layer
 	//Now the left most one
-	float ml = (2*frontWidth)/12;
-	float dl = (2*frontWidth)/6;
+	float ml = (2*frontWidth)/12 + 1;
+	float dl = (2*frontWidth)/6 -1;
 	float cl = (2*frontWidth)/2;
 	//we have to ensure that ml + dl + cl + dl + ml is equal to l i.e., 2*frontWidth
 	
@@ -509,7 +511,13 @@ namespace cs296
 	backrectangle_shape.SetAsBox(widthPR/2, (frontHeight- lag)/2); //take care of this width of this rod is double the original rodWidth
 	//backrectangle_def.position.Set(exco - 1+ frontWidth*2 - rodWidth - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2); //in case of back trackingremove -lag term      //rodWidth and widthPR/2 makes the pumpingRod stay to its right most point
 //	backrectangle_def.position.Set(exco + frontWidth + 1, whyco + rodWidth + (frontHeight-lag)/2);
-	backrectangle_def.position.Set(exco + ml + dl + cl - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2);
+//	backrectangle_def.position.Set(exco + ml + dl + cl - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2);
+	float a = (wheelRadius/2)*sqrt(2);
+	float b = sqrt(pow((firstWheelCenterx + gap + wheelRadius/2 - stabberx), 2) + pow(((*wheelBody2).GetWorldCenter().y + wheelRadius/2 - stabbery),2));
+	cout << b << endl;
+	cout << exco + ml + dl + cl - a - b - firstWheelCenterx - gap << endl;
+	float p = exco + ml + dl + cl - firstWheelCenterx - gap - a - b;//this is going to be the length of pusher
+	backrectangle_def.position.Set(stabberx + p, whyco + rodWidth + (frontHeight-lag)/2);
 	backrectangle_def.linearVelocity.Set(5,0); //this is just for testing purposes #testing
 	newFixture.shape = &backrectangle_shape;
 	newFixture.restitution = 1;    //#testing for this to work we have to give the restitution to frontl also
@@ -606,9 +614,11 @@ __________             | |
  
  */
 //Now comes the time for the actual ''stabber'' part
-	float stabberLag = 2.6; //this is the difference of x co ordinate of left end of frontl and right end of frontr
+//	float stabberLag = 2.6; //this is the difference of x co ordinate of left end of frontl and right end of frontr
+//	float stabberx = exco - stabberLength/2 - stabberLag;
+	//float stabbery = y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2;
 	backrectangle_shape.SetAsBox(stabberLength/2, (intraStabberWidth - rodWidth)/2);
-	backrectangle_def.position.Set(exco -  stabberLength/2 - stabberLag/* - rodWidth/2 - stabbingRodLength/2 + rodWidth*/, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2);
+	backrectangle_def.position.Set(stabberx/* - rodWidth/2 - stabbingRodLength/2 + rodWidth*/, stabbery);
 	newFixture.density = density;
 	b2Body* stabber = (*m_world).CreateBody(&backrectangle_def);
 //	newFixture.filter.groupIndex = 0;
@@ -686,8 +696,10 @@ __________             | |
 	(*m_world).CreateJoint(&orJointDef);
 	//Now a weird name is being introed
 	//Name of object between first and second floors is pulley Ideally, its length should be 5*(2fw)/12, but 2fw/2 would be better I guess
+//	backrectangle_shape.SetAsBox((cl+dl)/2, secondHeight/2);
 	backrectangle_shape.SetAsBox((cl+dl)/2, secondHeight/2);
-	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+	//backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+	backrectangle_def.position.Set(exco + ml + dl + (cl+dl)/2, whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
 	b2Body* pulley = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = density;
