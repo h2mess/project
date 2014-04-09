@@ -36,7 +36,7 @@ namespace cs296
   bool r_mouse_down;
   b2Vec2 lastp;
   extern b2Body* pumpingRod;
-
+//  extern void dominos_t::CreateCircle();
   b2Vec2 callbacks_t::convert_screen_to_world(int32 x, int32 y)
   {
     float32 u = x / static_cast<float32>(tw);
@@ -82,7 +82,7 @@ namespace cs296
     gluOrtho2D(lower.x, upper.x, lower.y, upper.y);
   }
   
-  
+
   void callbacks_t::keyboard_cb(unsigned char key, int x, int y)
   {
     //! What are these?
@@ -127,6 +127,9 @@ namespace cs296
 		//else if (pumpingRod->GetLinearVelocity().x < 0){
 		//pumpingRod->ApplyForce(b2Vec2(-4000,0), pumpingRod->GetWorldCenter() ,true);}
 		 break;
+//	case 'c':
+ //		CreateCircle();
+	//	break;
      
       //! The default case. Why is this needed?
     default:

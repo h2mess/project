@@ -1090,7 +1090,8 @@ __________             | |
 		for(int j = 0; j < noLayers; j++){
 		 for(int i = 0; i < parPerLine; i++){
 		  parBodyDef.position.Set(exco + rodWidth - parRadius + (i+1)*2*parRadius, (*enclosure).GetWorldCenter().y - rodWidth/2 - parRadius - layerWidth*j); 
-		  parBodyDef.linearVelocity.Set(rand()%velocityLimit, -rand()%velocityLimit); particles[i][j] = (*m_world).CreateBody(&parBodyDef); 
+		  parBodyDef.linearVelocity.Set(rand()%velocityLimit, -rand()%velocityLimit); 
+		  particles[i][j] = (*m_world).CreateBody(&parBodyDef); 
 		  (*particles[i][j]).SetGravityScale(0.1); 
 		  (*particles[i][j]).CreateFixture(&parFixture); 
 			} 
@@ -1099,6 +1100,24 @@ __________             | |
 	
 	(*a).pumpingRod = pumpingRod;
 	(*a).frontl = frontl;
+/*	std::cout << exco << std::endl;
+  (*a).excoa = exco;
+	std::cout << (*a).excoa << std::endl;
+	std::cout << whyco << std::endl;
+  (*a).whycoa = whyco;
+	std::cout << (*a).whycoa << std::endl;
+	std::cout << ml << std::endl;
+  (*a).mla = ml;
+	std::cout << dl << std::endl;
+  (*a).dla = dl;
+	std::cout << cl << std::endl;
+  (*a).cla = cl;
+	std::cout << rodWidth << std::endl;
+  (*a).rodWidtha = rodWidth;
+	std::cout << frontHeight << std::endl;
+  (*a).frontHeighta = frontHeight;
+	std::cout << secondHeight << std::endl;
+	(*a).secondHeighta = secondHeight;*/
 	m_world->b2World::SetContactListener(a);
 
 

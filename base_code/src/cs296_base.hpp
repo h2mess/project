@@ -31,7 +31,7 @@
 #include <cstdlib>
 
 #define	RAND_LIMIT 32767
-
+#include<math.h>
 namespace cs296
 {
 
@@ -161,8 +161,49 @@ namespace cs296
     void draw_title(int x, int y, const char *string);//!< Shows the title on the simulation at (x,y)
     //! Most of these void functions do nothing.They are for sake of completeness and avoid warnings
     virtual void step(settings_t* settings);
+	//private:
+	void CreateCircle()
+	{
+		float whycoa = 1.5, mla = 1.41421, dla = 2.82843, cla = 8.48528, rodWidtha = 1, frontHeighta = 8, secondHeighta = 4;
+		float radius = 0.2/5;
+		b2CircleShape shape;
+		shape.m_p.Set(0,0);
+		b2Vec2 p;
+	//	std::cout << excoa << whycoa << rodWidtha << frontHeighta << secondHeighta << std::endl;
+		if((*pumpingRod).GetLinearVelocity().x - (*frontl).GetLinearVelocity().x > 0){
+			p.Set((*frontl).GetWorldCenter().x - 0.5 + mla + dla/2, whycoa + rodWidtha + frontHeighta + rodWidtha + secondHeighta + 1);
+		}
+		else p.Set((*frontl).GetWorldCenter().x - 0.5 + mla + dla + cla + dla/2,  whycoa + rodWidtha + frontHeighta + rodWidtha + secondHeighta + 1);
+		shape.m_radius = radius;
+		b2FixtureDef fd;
+		fd.shape = &shape;
+		fd.restitution = 1;
+		fd.density = 80;
+//		fd.friction = 0.0f;
+		fd.filter.maskBits = 0x0004;
+		fd.filter.categoryBits = 0x0002;
 
-    virtual void keyboard(unsigned char key) { B2_NOT_USED(key); }
+//		b2Vec2 p(rand()%10, rand()%10);
+		b2BodyDef bd;
+
+		bd.linearVelocity.Set(rand()%20, rand()%20);
+		bd.type = b2_dynamicBody;
+		bd.position = p;
+		//bd.allowSleep = false;
+		b2Body* body = m_world->CreateBody(&bd);
+		(*body).SetGravityScale(0.1);
+		body->CreateFixture(&fd);
+	}
+	
+    virtual void keyboard(unsigned char key) {
+		B2_NOT_USED(key);
+//		std::cout << "new twist" << std::endl;
+		switch(key){
+			case 'c':
+				CreateCircle();
+				break;
+		}		
+ 	}
     virtual void keyboard_up(unsigned char key) { B2_NOT_USED(key); }
 
     void shift_mouse_down(const b2Vec2& p) { B2_NOT_USED(p); }
@@ -207,6 +248,7 @@ namespace cs296
   public:
 	b2Body* pumpingRod;
 	b2Body* frontl;
+//	float excoa, whycoa, mla, dla, cla, rodWidtha, frontHeighta, secondHeighta;
   };
 }
 

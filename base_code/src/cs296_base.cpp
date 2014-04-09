@@ -18,6 +18,7 @@
 
 #include "cs296_base.hpp"
 #include <cstdio>
+#include<math.h>
 using namespace std;
 using namespace cs296;
 
@@ -62,14 +63,14 @@ void base_sim_t::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 	if(a == pumpingRod){
 		bool positive = (*a).GetLinearVelocity().x  - (*frontl).GetLinearVelocity().x > 0;
 		bool validCollision = (positive && ((*a).GetWorldCenter().x -1 > (*b).GetWorldCenter().x)) || (!positive && ((*a).GetWorldCenter().x + 1 <= (*b).GetWorldCenter().x));
-		std::cout << "gone" << std::endl;
+//		std::cout << "gone" << std::endl;
 		if(!validCollision) (*contact).SetEnabled(false);
 	}
 	if(b == pumpingRod){
 		bool positive = (*b).GetLinearVelocity().x - (*frontl).GetLinearVelocity().x> 0;
 		bool validCollision = (positive && ((*b).GetWorldCenter().x - 1 > (*a).GetWorldCenter().x)) || (!positive && ((*b).GetWorldCenter().x + 1 <= (*a).GetWorldCenter().x));
 
-		std::cout << "lsdkhg" << std::endl;
+	//	std::cout << "lsdkhg" << std::endl;
 		if(!validCollision) (*contact).SetEnabled(false);
 	}
 /*  const b2Manifold* manifold = contact->GetManifold();
@@ -265,4 +266,13 @@ void base_sim_t::step(settings_t* settings)
 	    }
 	}
     }
+  	float minimum = 1;
+	b2Body* a = (*m_world).GetBodyList();
+	for(;a != NULL; a = (*a).GetNext()){
+		if((*a).IsBullet()){
+			if(sqrt(pow((*a).GetLinearVelocity().x,2) + pow((*a).GetLinearVelocity().y,2))< minimum){
+				(*m_world).DestroyBody(a);
+			}
+		}
+	}
 }
