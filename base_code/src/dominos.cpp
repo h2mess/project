@@ -56,10 +56,11 @@ namespace cs296
 	float rodWidth = 1;
 	float density = 1;
 	float pi = 3.14159;
-	float length_bigrectangle = 4*wheelRadius + 7;//+6
+	float length_bigrectangle = 4*wheelRadius + 6;//+6
 	float breadth_bigrectangle = 10;
 	float modifier = 7;
 	float x_bigrectangle = firstWheelCenterx + wheelRadius*3 + 4;//+3
+	float widthPR = rodWidth*2; //this is the width of pumping rod
 	float y_bigrectangle = groundHeight + wheelRadius*2 + breadth_bigrectangle-2;
 	//float x_bigrectangle_var = 2.5;
 	float length_backrectangle = 8;
@@ -67,9 +68,11 @@ namespace cs296
 	float x_backrectangle = x_bigrectangle - length_bigrectangle - length_backrectangle ;
 
 	float y_backrectangle = y_bigrectangle-wheelRadius/2;
-
+	//we need difference between b -a +p and b + a + p to be equal to c (actually c - widthPR). For this, c = 2a. But we fixed c = l/2, therefore, l = 4a. Therefore frontWidth = 2a. But a is wheelRadius/2*root2. 
 	float height_exhaust = wheelRadius;
-	float frontWidth = length_backrectangle -0.00 ;//it was actually 0.25 have to see which one is better
+//	float frontWidth = length_backrectangle + 0.25;//it was actually 0.25 have to see which one is better
+	float frontWidth = wheelRadius*sqrt(2);
+	float frontLag = (1.0/10)*frontWidth;  //Let the lag between pumpingRod and frontr and frontl is 1/10 of frontWidth presently
 	float frontHeight = (breadth_backrectangle - breadth_bigrectangle)*2 + 2;
 	float stabbingRodLength = 14;  //#testing
 	float stabbingWidth = 2;
@@ -150,7 +153,7 @@ namespace cs296
 	b2Body* otrodBody = (*m_world).CreateBody(&otrodBodyDef);
 	b2FixtureDef otrodFixtureDef;
 //	otrodFixtureDef.density = 5*density;
-	otrodFixtureDef.density = 10; //#testing
+	otrodFixtureDef.density = 1; //#testing ///Yo man it was 10 here before
 	otrodFixtureDef.filter.groupIndex = -2;
 	otrodFixtureDef.shape = &otrodShape;
 	(*otrodBody).CreateFixture(&otrodFixtureDef);
@@ -194,11 +197,11 @@ namespace cs296
 	orJointDef.localAnchorB.Set(-wheelRadius/4,-wheelRadius/4);
 	(b2RevoluteJoint*) m_world->CreateJoint(&orJointDef);*/
 	orJointDef.Initialize(wheelBody2, holyrodBody, (*wheelBody2).GetPosition());
-//	orJointDef.motorSpeed = 2000.0f;
-//	orJointDef.maxMotorTorque = 400.0f;
-//	orJointDef.enableMotor = true;
+	orJointDef.motorSpeed = 10.0f;
+	orJointDef.maxMotorTorque = 400.0f;
+	orJointDef.enableMotor = true;
 	(*m_world).CreateJoint(&orJointDef);
-//	orJointDef.enableMotor = false;	
+	orJointDef.enableMotor = false;	
 /*	orJointDef.localAnchorA.Set(wheelRadius/2,wheelRadius/2);
 	orJointDef.localAnchorB.Set(wheelRadius/4,wheelRadius/4);
 	(b2RevoluteJoint*) (*m_world).CreateJoint(&orJointDef);*/
@@ -222,62 +225,36 @@ namespace cs296
 	onethreeDef.localAnchorA.Set(-wheelRadius/2,
 */
 // Mahindar code ===============================================================================================================
-		/*b2Vec2 rec_vertices[6];
-
-	rec_vertices[0].Set(x_bigrectangle + length_bigrectangle,y_bigrectangle + breadth_bigrectangle);
-
-	rec_vertices[1].Set(x_bigrectangle - length_bigrectangle,y_bigrectangle + breadth_bigrectangle);
-
-	//rec_vertices[2].Set(x_bigrectangle - length_bigrectangle,y_bigrectangle - breadth_bigrectangle - wheelRadius);
-
-	//rec_vertices[3].Set(x_bigrectangle - length_bigrectangle + modifier,y_bigrectangle - breadth_bigrectangle - wheelRadius);
-
-	rec_vertices[2].Set(x_bigrectangle - length_bigrectangle ,y_bigrectangle - breadth_bigrectangle - wheelRadius);
-
-	rec_vertices[3].Set(x_bigrectangle + length_bigrectangle ,y_bigrectangle - breadth_bigrectangle - wheelRadius);
-
-	rec_vertices[4].Set(x_bigrectangle + length_bigrectangle - modifier,y_bigrectangle - breadth_bigrectangle - wheelRadius);
-
-	rec_vertices[5].Set(x_bigrectangle + length_bigrectangle, y_bigrectangle - breadth_bigrectangle - wheelRadius);*/
-
-	// This is for big bogey in train
-	b2PolygonShape bigrectangle_shape;
+	/*! \section Big Rectangle
+	* \brief It is the middle big box of the train
+	*/
+	b2PolygonShape bigrectangle_shape;//!< \b Type : \b b2PolygonShape .It is used to define a shape to polygon only convex
 	bigrectangle_shape.SetAsBox(length_bigrectangle,breadth_bigrectangle);
 
-	b2BodyDef bigrectangle_def;
+	b2BodyDef bigrectangle_def; //!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
 	bigrectangle_def.type = b2_dynamicBody;
 	bigrectangle_def.position.Set(x_bigrectangle , y_bigrectangle);
-	b2Body* bigrectangle_body = (*m_world).CreateBody(&bigrectangle_def);
+	b2Body* bigrectangle_body = (*m_world).CreateBody(&bigrectangle_def);//!< Body object of Big Rectangle
 
-	b2FixtureDef bigrectangle_fixture;
+	b2FixtureDef bigrectangle_fixture;//!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 	bigrectangle_fixture.shape = &bigrectangle_shape;
-
 	bigrectangle_fixture.density = 1.0;
-
 	bigrectangle_fixture.filter.groupIndex = -2;
-
 	(*bigrectangle_body).CreateFixture(&bigrectangle_fixture);
 
 	
 	// big rectangle wheel body joint def
-
-
-	b2RevoluteJointDef br_wh_def1;
-
+	b2RevoluteJointDef br_wh_def1; //!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restricts motion of a bodyB w.r.t bodyA allowing only rotation
 	br_wh_def1.Initialize(bigrectangle_body,wheelBody1,wheelBody1->GetPosition());
 
-	b2RevoluteJointDef br_wh_def2;
-
+	b2RevoluteJointDef br_wh_def2;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restricts motion of a bodyB w.r.t bodyA allowing only rotation
 	br_wh_def2.Initialize(bigrectangle_body,wheelBody2,wheelBody2->GetPosition());
 
-	b2RevoluteJointDef br_wh_def3;
-
+	b2RevoluteJointDef br_wh_def3;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restrictsmotion of a bodyB w.r.t bodyA allowing only rotation
 	br_wh_def3.Initialize(bigrectangle_body,wheelBody3,wheelBody3->GetPosition());
 
 	m_world->CreateJoint(&br_wh_def1);
-
 	m_world->CreateJoint(&br_wh_def2);
-
 	m_world->CreateJoint(&br_wh_def3);
 
 	/**m_world->CreateJoint(&br_wh_joint1);
@@ -288,104 +265,73 @@ namespace cs296
 
 
 
-	//realm of back rectangle
+		
+	/*! \section Back Rectangle
+	* \brief It is the back box of the train
+	*/
 
-	b2PolygonShape backrectangle_shape;
+	b2PolygonShape backrectangle_shape;//!< \b Type : \b b2PolygonShape .It is used to define a shape to polygon only convex
 	backrectangle_shape.SetAsBox(length_backrectangle,breadth_backrectangle);
-	b2BodyDef backrectangle_def;
 
+	b2BodyDef backrectangle_def;//!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
 	backrectangle_def.type = b2_dynamicBody;
-
 	backrectangle_def.position.Set(x_backrectangle,y_backrectangle);
+	b2Body* backrectangle_body = (*m_world).CreateBody(&backrectangle_def);//!< Body object of Back Rectangle
 
-	b2Body* backrectangle_body = (*m_world).CreateBody(&backrectangle_def);
-
-	b2FixtureDef backrectangle_fixture;
-
+	b2FixtureDef backrectangle_fixture;//!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 	backrectangle_fixture.shape = &backrectangle_shape;
-
 	backrectangle_fixture.density = 1.0;
-
 	backrectangle_fixture.filter.groupIndex = -2;
-
 	(*backrectangle_body).CreateFixture(&backrectangle_fixture);
 
 
 	//big rectangle back rectangle joints
 	
 	
-	b2Vec2 big_back_point1;
-
+	b2Vec2 big_back_point1;//!< \b Type : \b b2vec2 .It store x and y co-ordinates
 	big_back_point1.Set(x_backrectangle+length_backrectangle,y_backrectangle+breadth_backrectangle);
 
-	b2RevoluteJointDef big_back_def1;
+	b2RevoluteJointDef big_back_def1;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restrictsmotion of a bodyB w.r.t bodyA allowing only rotation
 	big_back_def1.Initialize(bigrectangle_body,backrectangle_body,big_back_point1);
 	m_world->CreateJoint(&big_back_def1);
 
 	
-	b2Vec2 big_back_point2;
-
+	b2Vec2 big_back_point2;//!< \b Type : \b b2vec2 .It store x and y co-ordinates
 	big_back_point2.Set(x_backrectangle + length_backrectangle,y_backrectangle - breadth_backrectangle);
 
-	b2RevoluteJointDef big_back_def2;
-
+	b2RevoluteJointDef big_back_def2;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restrictsmotion of a bodyB w.r.t bodyA allowing only rotation
 	big_back_def2.Initialize(bigrectangle_body,backrectangle_body,big_back_point2);
-
 	m_world->CreateJoint(&big_back_def2);
-
-
-	/*b2Vec2 welding_point1;
-
-	welding_point1.Set(x_backrectangle+length_backrectangle,y_backrectangle);
-
-	b2WeldJointDef bir_bar_def1;
-
-	bir_bar_def1.Initialize(bigrectangle_body,backrectangle_body,welding_point);
-
-	m_world->CreateJoint(&bir_bar_def1);*/
-
-
 	//Circle under the back rectangle
+	/*! \section Small Circle 
+	* \brief Small Circle acts as a wheel which is below the Back rectangle and is connected to it using revolute joint
+	*/
 
-
-	b2CircleShape smallcircle_shape;
-
+	b2CircleShape smallcircle_shape;//!< \b Type : \b b2CircleShape .It creates a circle shape whose radius is given by us
 	smallcircle_shape.m_p.Set(0,0);
-
 	smallcircle_shape.m_radius = wheelRadius/2;
 
-
-
-	b2BodyDef smallcircle_def1;
-
+	b2BodyDef smallcircle_def1;//!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
 	smallcircle_def1.type = b2_dynamicBody;
-
 	smallcircle_def1.position.Set(x_backrectangle,groundHeight+wheelRadius/2);
+	b2Body* smallcircle_body1 = (*m_world).CreateBody(&smallcircle_def1);//!< Body object of Small circle below the back rectangle
 
-	b2Body* smallcircle_body1 = (*m_world).CreateBody(&smallcircle_def1);
-
-
-
-
-	b2FixtureDef smallcircle_fixture;
-
+	b2FixtureDef smallcircle_fixture;//!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 	smallcircle_fixture.shape = &smallcircle_shape;
-
 	smallcircle_fixture.density = 1.0;
-
 	smallcircle_fixture.filter.groupIndex = -2;
-
 	(*smallcircle_body1).CreateFixture(&smallcircle_fixture);
 
 	
 
-	// Joint to connect back circle
-	b2RevoluteJointDef sc_back_def;
 
+	// Joint to connect back circle
+	b2RevoluteJointDef sc_back_def;//!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restrictsmotion of a bodyB w.r.t bodyA allowing only rotation
 	sc_back_def.Initialize(backrectangle_body,smallcircle_body1,smallcircle_body1->GetPosition());
 	m_world->CreateJoint(&sc_back_def);
 
 	//Mahindar code graciously ends=============================================================================================================
+	
 	
 	bigrectangle_def.position.Set(firstWheelCenterx + 2*gap, y_bigrectangle +  breadth_bigrectangle + height_exhaust/2);
     bigrectangle_shape.SetAsBox(height_exhaust/2, height_exhaust/2);
@@ -463,7 +409,43 @@ namespace cs296
 	//Weld Joint has solved the problem of this welding. Have to see how long it works
 	//Now starts the level which is frontHeight above the previous layer
 	//Now the left most one
-	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2);
+	float ml = (2*frontWidth)/12;
+	float dl = (2*frontWidth)/6;
+	float cl = (2*frontWidth)/2;
+	//we have to ensure that ml + dl + cl + dl + ml is equal to l i.e., 2*frontWidth
+	
+	backrectangle_shape.SetAsBox(ml/2, rodWidth/2); //reducing frontWidth/4 to frontWidth/6 both on ofirst and othird
+	backrectangle_def.position.Set(exco + ml/2, whyco + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* ofirst = (*m_world).CreateBody(&backrectangle_def);
+	(*ofirst).CreateFixture(&newFixture);
+	//left most one is over
+
+	//middle one
+	backrectangle_shape.SetAsBox(cl/2, rodWidth/2);
+	backrectangle_def.position.Set(exco + ml + dl + cl/2, whyco + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	b2Body* osecond = (*m_world).CreateBody(&backrectangle_def);
+	(*osecond).CreateFixture(&newFixture);
+	//middle one is over
+
+	b2PrismaticJointDef psjointtest;
+	psjointtest.bodyA = frontb;
+	psjointtest.bodyB = osecond;
+	psjointtest.localAxisA = b2Vec2(1,0);
+	psjointtest.localAnchorB = b2Vec2(0,0);
+	psjointtest.localAnchorA = b2Vec2(0, frontHeight + rodWidth);
+	(*m_world).CreateJoint(&psjointtest);
+// We nailed osecond Ho hoo ho!!
+// THis is after prismatic joint test
+	backrectangle_shape.SetAsBox(ml/2, rodWidth/2);
+	backrectangle_def.position.Set(exco + ml + dl + cl + dl + ml/2, whyco + rodWidth + frontHeight + rodWidth/2);
+	newFixture.shape = &backrectangle_shape;
+	newFixture.density = 0;
+	b2Body* othird = (*m_world).CreateBody(&backrectangle_def);
+	(*othird).CreateFixture(&newFixture);
+
+/*	backrectangle_shape.SetAsBox(frontWidth/4, rodWidth/2); //reducing frontWidth/4 to frontWidth/6 both on ofirst and othird
 	backrectangle_def.position.Set(exco + frontWidth/4, whyco + rodWidth + frontHeight + rodWidth/2);
 	newFixture.shape = &backrectangle_shape;
 	b2Body* ofirst = (*m_world).CreateBody(&backrectangle_def);
@@ -493,7 +475,7 @@ namespace cs296
 	newFixture.density = 0;
 	b2Body* othird = (*m_world).CreateBody(&backrectangle_def);
 	(*othird).CreateFixture(&newFixture);
-
+*/
 	//now, we weld things by using distance joints
 	weld.Initialize(frontl, ofirst, b2Vec2(exco+rodWidth/2, whyco+rodWidth*(3.0/2)+frontHeight));
 	(*m_world).CreateJoint(&weld);
@@ -524,10 +506,11 @@ namespace cs296
 
 	float lag = 0.1; //this is the difference between bottom of osecond and top of pumpingRod
 //	backrectangle_shape.SetAsBox(rodWidth, frontHeight/2); //changing this still causes trouble due to wobbling of osecond
-	float widthPR = rodWidth*5; //this is the width of pumping rod
 	backrectangle_shape.SetAsBox(widthPR/2, (frontHeight- lag)/2); //take care of this width of this rod is double the original rodWidth
-	backrectangle_def.position.Set(exco - 1+ frontWidth*2 - rodWidth - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2); //in case of back trackingremove -lag term      //rodWidth and widthPR/2 makes the pumpingRod stay to its right most point
-	backrectangle_def.linearVelocity.Set(-10,0); //this is just for testing purposes #testing
+	//backrectangle_def.position.Set(exco - 1+ frontWidth*2 - rodWidth - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2); //in case of back trackingremove -lag term      //rodWidth and widthPR/2 makes the pumpingRod stay to its right most point
+//	backrectangle_def.position.Set(exco + frontWidth + 1, whyco + rodWidth + (frontHeight-lag)/2);
+	backrectangle_def.position.Set(exco + ml + dl + cl - widthPR/2, whyco + rodWidth + (frontHeight-lag)/2);
+	backrectangle_def.linearVelocity.Set(5,0); //this is just for testing purposes #testing
 	newFixture.shape = &backrectangle_shape;
 	newFixture.restitution = 1;    //#testing for this to work we have to give the restitution to frontl also
 	newFixture.density = density;
@@ -537,6 +520,44 @@ namespace cs296
 	backrectangle_def.linearVelocity.Set(0,0);
 	newFixture.density = 0;
 	//now, the moving parts based on pumpingRod
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	b2Vec2 co_middlepoint;
+	float x_middlepoint = bigrectangle_body->GetPosition().x + length_bigrectangle + frontWidth;
+	float y_middlepoint = pumpingRod->GetPosition().y;
+	co_middlepoint.Set(x_middlepoint,y_middlepoint);
+
+	b2DistanceJointDef jointDef1;
+	//float x_distance_joint = length_bigrectangle + bigrectangle_body->GetPosition().x + frontWidth;
+	float x_distance_joint = frontr->GetPosition().x;
+	float y_distance_joint = pumpingRod->GetPosition().y;
+	b2Vec2 co_distance_joint;
+	co_distance_joint.Set(x_distance_joint,y_distance_joint);
+	jointDef1.Initialize(pumpingRod, frontr, co_middlepoint,co_distance_joint);
+	//jointDef1.Initialize(pumpingRod, frontr, pumpingRod->GetPosition(),co_distance_joint);
+	jointDef1.frequencyHz = 0.1f;
+	jointDef1.dampingRatio = 0.0f;
+	jointDef1.collideConnected = true;
+	(*m_world).CreateJoint(&jointDef1);
+
+
+	b2DistanceJointDef jointDef2;
+	float x_distance_joint2 = frontl->GetPosition().x;
+	float y_distance_joint2 = pumpingRod->GetPosition().y;
+	b2Vec2 co_distance_joint2;
+	co_distance_joint2.Set(x_distance_joint2,y_distance_joint2);
+	jointDef2.Initialize(pumpingRod, frontl,co_middlepoint,co_distance_joint2);
+	//jointDef2.Initialize(pumpingRod, frontl,pumpingRod->GetPosition(),co_distance_joint2);
+	jointDef2.frequencyHz = 0.1f;
+	jointDef2.dampingRatio = 0.0f;
+	jointDef2.collideConnected = true;
+	(*m_world).CreateJoint(&jointDef2);
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 	
 	backrectangle_shape.SetAsBox(stabbingRodLength/2, rodWidth/2);
 	backrectangle_def.position.Set(exco - stabbingRodLength/2 + rodWidth, y_bigrectangle - breadth_bigrectangle - stabbingWidth);
@@ -665,12 +686,19 @@ __________             | |
 	(*m_world).CreateJoint(&orJointDef);
 	//Now a weird name is being introed
 	//Name of object between first and second floors is pulley Ideally, its length should be 5*(2fw)/12, but 2fw/2 would be better I guess
-	backrectangle_shape.SetAsBox(frontWidth/3, secondHeight/2);
+	backrectangle_shape.SetAsBox((cl+dl)/2, secondHeight/2);
 	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
 	b2Body* pulley = (*m_world).CreateBody(&backrectangle_def);
 	newFixture.shape = &backrectangle_shape;
 	newFixture.density = density;
 	(*pulley).CreateFixture(&newFixture);
+	
+/*	backrectangle_shape.SetAsBox(frontWidth/3, secondHeight/2);
+	backrectangle_def.position.Set(frontWidth*(5.0/6) + exco , whyco + rodWidth + frontHeight + rodWidth + secondHeight/2);
+	b2Body* pulley = (*m_world).CreateBody(&backrectangle_def);
+	newFixture.shape = &backrectangle_shape;
+	newFixture.density = density;
+	(*pulley).CreateFixture(&newFixture);*/
 	newFixture.density = 0;
 	
 
@@ -716,7 +744,7 @@ __________             | |
 	//Now, we have to create a new circle at an appropriate distance and connect them by a rod
 	//Now, first we create rod
 	float pointHeight = ycoofpoint - (*lcircle).GetWorldCenter().y; //this is height of second point wrt lcircle
-	cout << pointHeight << endl;
+	//cout << pointHeight << endl;
 	float theta = 20;
 	float xcom = (*lcircle).GetWorldCenter().x + (pointHeight/tan(theta*pi/180))/2; //this is x coordinate of com of rod before rotating
 	float ycom = (*lcircle).GetWorldCenter().y + pointHeight/2;      //this is y coordinate of com of rod before rotating
@@ -828,39 +856,43 @@ __________             | |
 
 ///////////////////////////////////////////////////////////Monday Morning second wala//////////////////////////////////////////////////////////////////////////////
 
-    //The rod between stabber and holyrod
+    
 
-	b2Vec2 stabber_centre;
+	
+
+	//stabber_initialjoint rod :The rod between stabber and holyrod
+	/*! \section Stabber_Intialjoint rod
+	* \brief This rod joins the stabber and the holy rod 
+	*/
+	b2Vec2 stabber_centre;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of stab centre
 	stabber_centre = stabber->GetPosition();
-	//b2PolygonShape stabber_initialjoint_shape;
-	b2Vec2  stabber_initialjoint_vertices[4];
-	float x_stabber_intialjoint1 = firstWheelCenterx+gap+wheelRadius/2 ;
-	float x_stabber_intialjoint2 = x_bigrectangle + length_bigrectangle - stabbingRodLength/2;
-	float y_stabber_intialjoint1 = groundHeight+wheelRadius*(1+(1.0/2));
-	float y_stabber_intialjoint2 = y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2;
-	stabber_initialjoint_vertices[0].Set(firstWheelCenterx+gap+wheelRadius/2 + 0.4, groundHeight+wheelRadius*(1+(1.0/2))+0.4);
-	stabber_initialjoint_vertices[1].Set(firstWheelCenterx+gap+wheelRadius/2 - 0.6, groundHeight+wheelRadius*(1+(1.0/2)) - 0.2);
-	stabber_initialjoint_vertices[2].Set(exco - stabberLag -stabberLength/2 + 0.4, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 + 0.4);
-	stabber_initialjoint_vertices[3].Set(exco - stabberLag - stabberLength/2 - 0.6, y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth - intraStabberWidth/2 - 0.2);
-	b2PolygonShape stabber_initialjoint_shape;
-	stabber_initialjoint_shape.Set(stabber_initialjoint_vertices,4);
-	b2BodyDef stabber_initialjoint_def;
-	//stabber_initialjoint_def.position.Set((x_stabber_intialjoint2+x_stabber_intialjoint1)/2,(y_stabber_intialjoint2+y_stabber_intialjoint1)/2);
+	b2Vec2 holyrod_end ;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates fo holy rod's end
+	holyrod_end.Set(holyrodBody->GetPosition().x + wheelRadius/4,holyrodBody->GetPosition().y + wheelRadius/4);
+
+	float length_stabber_initialjoint = sqrt(pow(stabber_centre.x - holyrod_end.x,2)+pow(stabber_centre.y - holyrod_end.y,2)); //!< \b Type : \b float.  It is the length of rod joining the stabber and the holy rod .
+	float angle_stabber_initialjoint = atan(stabber_centre.y - holyrod_end.y/stabber_centre.x - holyrod_end.x)*pi/180;//!< \b Type : \b float. It has the angle of the rod joining the stabber and the holy rod w.r.t vertical.
+	b2PolygonShape stabber_initialjoint_shape;//!< \b Type : \b b2PolygonShape. It helps us in creating Polygon shapes (convex)
+	stabber_initialjoint_shape.SetAsBox(length_stabber_initialjoint/2,rodWidth/2);
+	b2BodyDef stabber_initialjoint_def;//!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
+	stabber_initialjoint_def.position.Set((stabber_centre.x + holyrod_end.x)/2,(stabber_centre.y + holyrod_end.y)/2);
+	stabber_initialjoint_def.angle = - angle_stabber_initialjoint - pi/30;
 	stabber_initialjoint_def.type = b2_dynamicBody;
 	b2Body* stabber_initialjoint_body = (*m_world).CreateBody(&stabber_initialjoint_def);
-	b2FixtureDef stabber_initialjoint_fixture;
+	b2FixtureDef stabber_initialjoint_fixture;//!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 	stabber_initialjoint_fixture.density = 1.0;
 	stabber_initialjoint_fixture.filter.groupIndex = -2;
 	stabber_initialjoint_fixture.shape = &stabber_initialjoint_shape;
 	(*stabber_initialjoint_body).CreateFixture(&stabber_initialjoint_fixture);
-	b2Vec2 point_st_ij;
-	point_st_ij.Set(x_stabber_intialjoint2,y_stabber_intialjoint2);
-	big_back_def1.Initialize(stabber,stabber_initialjoint_body,stabber->GetPosition());
+	big_back_def1.Initialize(stabber,stabber_initialjoint_body,stabber->GetPosition()); 
 	(*m_world).CreateJoint(&big_back_def1);
-	b2Vec2 point_st_ij1;
-	point_st_ij1.Set(x_stabber_intialjoint1,y_stabber_intialjoint1);
-	big_back_def1.Initialize(holyrodBody,stabber_initialjoint_body,point_st_ij1);
+	big_back_def1.Initialize(holyrodBody,stabber_initialjoint_body,holyrod_end);
 	(*m_world).CreateJoint(&big_back_def1);
+
+
+	// holyrod2 : The smaller horizontal rod connected to the end of holyrod 
+	/*! \section The Holy Rod2
+	* \brief The smaller horizontal rod connected to the end of holyrod
+	*/
 	float var1 = 3.0;
 	float x_holyrod2 = firstWheelCenterx+gap+wheelRadius/2+wheelRadius+var1;
 	otrodShape.SetAsBox(wheelRadius+var1,rodWidth/2);
@@ -870,10 +902,17 @@ __________             | |
 	otrodFixtureDef.shape = &otrodShape;
 	otrodFixtureDef.filter.groupIndex = -2;
 	(*holyrodBody2).CreateFixture(&otrodFixtureDef);
-	b2Vec2 point_holy2;
+	b2Vec2 point_holy2;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of holyrod end
 	point_holy2.Set(firstWheelCenterx+gap+wheelRadius/2,groundHeight+wheelRadius*(1+(1.0/2)));
 	big_back_def1.Initialize(holyrodBody,holyrodBody2,point_holy2);
 	(*m_world).CreateJoint(&big_back_def1);
+
+
+
+	//holyrod3 : The rod which is connected to center of big rectangle and is connected to the smaller horizontal rod
+	/*! \section The Holy Rod3
+	* \brief It is the rod with some angle with horizontal to holyrod2
+	*/
 	float length_holyrod3 = 3;
 	float angle = -pi/5;
 	float x_holyrod3 = x_holyrod2 + wheelRadius+var1+ length_holyrod3*sin(angle);
@@ -885,31 +924,30 @@ __________             | |
 	otrodFixtureDef.shape = &otrodShape;
 	otrodFixtureDef.filter.groupIndex = -2;
 	(*holyrodBody3).CreateFixture(&otrodFixtureDef);
-	b2Vec2 point_holy3;
+	b2Vec2 point_holy3;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of holyrod2's end
 	point_holy3.Set(firstWheelCenterx+gap+wheelRadius/2+wheelRadius+var1+wheelRadius+var1,groundHeight+wheelRadius*(1+(1.0/2)));
 	big_back_def1.Initialize(holyrodBody2,holyrodBody3,point_holy3);
 	(*m_world).CreateJoint(&big_back_def1);
-	b2Vec2 point_holy4;
+	b2Vec2 point_holy4;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of top end of holyrod4's end
 	point_holy4.Set(x_holyrod3 + length_holyrod3*sin(angle),groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*2*cos(-angle));
 	big_back_def1.Initialize(bigrectangle_body,holyrodBody3,point_holy4);
 	(*m_world).CreateJoint(&big_back_def1);
-	//rod under Stabber
-	backrectangle_shape.SetAsBox(rodWidth/2,wheelRadius/4);
-	backrectangle_def.position.Set(x_bigrectangle + length_bigrectangle - stabberLength/2,y_bigrectangle - breadth_bigrectangle - stabbingWidth - rodWidth/2 - (intraStabberWidth-rodWidth)/2 - wheelRadius/4);
-	//b2Body* stabber_holybody = (*m_world).CreateBody(&backrectangle_def);
-	newFixture.shape = &backrectangle_shape;
-	//(*stabber_holybody).CreateFixture(&newFixture);
-	//big_back_def1.Initialize(stabber,stabber_holybody,stabber->GetPosition());
-	//(*m_world).CreateJoint(&big_back_def1);
-	float length_LastRod_1 = 6;
-	b2PolygonShape LastRod_1_shape;
+	
+
+
+	//The rod which connects the holyrod3 and the right rod
+	/*! \section The Last Rod
+	* \brief It connects the right rod and the holyrod3
+	*/
+	float length_LastRod_1 = 6; //! \b Type : \b float .It has the length of the Last Rod
+	b2PolygonShape LastRod_1_shape;//!< \b Type : \b b2PolygonShape. It helps us in creating Polygon shapes (convex)
 	LastRod_1_shape.SetAsBox(length_LastRod_1,smallWidth/2);
-	b2BodyDef LastRod_1_def;
+	b2BodyDef LastRod_1_def;//!< \b Type : \b b2BodyDef .It is a definition for a body which is used to create a body object i.e. determining the position,dynamics
 	LastRod_1_def.type = b2_dynamicBody;
 	LastRod_1_def.position.Set(holyrodBody3->GetPosition().x + length_LastRod_1,holyrodBody3->GetPosition().y);
 	//LastRod_1_def.shape = &LastRod_1_shape;
-	b2Body* LastRod_1_body = (*m_world).CreateBody(&LastRod_1_def);
-	b2FixtureDef LastRod_1_fixture;
+	b2Body* LastRod_1_body = (*m_world).CreateBody(&LastRod_1_def);//!< Body of Last Rod
+	b2FixtureDef LastRod_1_fixture; //!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 	LastRod_1_fixture.shape = &LastRod_1_shape;
 	LastRod_1_fixture.density = density;
 	LastRod_1_fixture.filter.groupIndex = -2;
@@ -918,11 +956,15 @@ __________             | |
 	orJointDef.Initialize(holyrodBody3,LastRod_1_body,holyrodBody3->GetPosition());
 	(*m_world).CreateJoint(&orJointDef);
 
-	b2Vec2 point_hrb3_lr_1;
+	b2Vec2 point_hrb3_lr_1;//!< \b Type : \b b2Vec2 . It stores x and y co-ordinates of Last Rod 's end
 	point_hrb3_lr_1.Set(holyrodBody3->GetPosition().x + length_LastRod_1*2,holyrodBody3->GetPosition().y);
 	orJointDef.Initialize(rightrod,LastRod_1_body,point_hrb3_lr_1);
 	(*m_world).CreateJoint(&orJointDef);
 //	float_
+	
+
+
+	
 
 ///////////////////////end of monday code .........................................................................
  	}

@@ -32,9 +32,13 @@ namespace cs296
   class dominos_t : public base_sim_t
   {
   public:
+	  b2Fixture* pumpingFixture;
+	  b2Fixture* leftFixture;
+	  b2Fixture* rightFixture;
     
     dominos_t();
     
+	void PreSolve(b2Contact* a, b2Manifold* b);
     static base_sim_t* create()
     {
       return new dominos_t;
