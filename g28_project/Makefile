@@ -140,4 +140,4 @@ install:
 	@cp -r $(DOCDIR)/doc/html $(IFOLDER)/html
 	@cp $(DOCDIR)/report.pdf $(IFOLDER)/report.pdf
 dist: distclean
-	@cd ..; tar cf cs296-g28-project.tar g28_project README.txt; gzip cs296-g28-project.tar; 
+	@cd ..; tar cf cs296-g28-project.tar g28_project .git README.txt; gzip cs296-g28-project.tar; 
