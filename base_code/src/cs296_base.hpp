@@ -165,7 +165,7 @@ namespace cs296
 	void CreateCircle()
 	{
 		float whycoa = 1.5, mla = 1.41421, dla = 2.82843, cla = 8.48528, rodWidtha = 1, frontHeighta = 8, secondHeighta = 4;
-		float radius = 0.2/5;
+		float radius = 0.2/2;
 		b2CircleShape shape;
 		shape.m_p.Set(0,0);
 		b2Vec2 p;
@@ -185,14 +185,16 @@ namespace cs296
 
 //		b2Vec2 p(rand()%10, rand()%10);
 		b2BodyDef bd;
-
-		bd.linearVelocity.Set(rand()%20, rand()%20);
-		bd.type = b2_dynamicBody;
-		bd.position = p;
-		//bd.allowSleep = false;
-		b2Body* body = m_world->CreateBody(&bd);
-		(*body).SetGravityScale(0.1);
-		body->CreateFixture(&fd);
+		bd.bullet = true;
+		for(int i = 0; i < 10; i++){
+			bd.linearVelocity.Set(rand()%10, rand()%10);
+			bd.type = b2_dynamicBody;
+			bd.position = p;
+			//bd.allowSleep = false;
+			b2Body* body = m_world->CreateBody(&bd);
+			(*body).SetGravityScale(0.1);
+			body->CreateFixture(&fd);
+		}
 	}
 	
     virtual void keyboard(unsigned char key) {

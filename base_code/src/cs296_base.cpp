@@ -110,7 +110,10 @@ void base_sim_t::step(settings_t* settings)
 {
 //	std::cout << "hello" << std::endl;
   float32 time_step = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
-
+    m_debug_draw.DrawString(500,40, "Keys");
+	m_debug_draw.DrawString(500,60, "b for breaks");
+	m_debug_draw.DrawString(500,80, "q for acceleration");
+	m_debug_draw.DrawString(500,100, "c to create steam (use it only when required)");
   if (settings->pause)
     {
       if (settings->single_step)

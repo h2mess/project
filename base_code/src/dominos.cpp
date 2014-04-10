@@ -115,7 +115,8 @@ namespace cs296
 
     b2Body* otrodBody;
 	b2Body* holyrodBody ;
-
+//	(*otrodBody).SetGravityScale(0.1);
+//	(*holyrodBody).SetGravityScale(0.1);
 	b2Body* bigrectangle_body;//!< Body object of Big Rectangle
 	b2Body* backrectangle_body;//!< Body object of Back Rectangle
 
@@ -248,11 +249,12 @@ namespace cs296
 		otrodBodyDef.angle = 0;
 		otrodBodyDef.position.Set(firstWheelCenterx+(wheelRadius/2)+gap, wheelRadius*1.5+groundHeight);
 		otrodBody = (*m_world).CreateBody(&otrodBodyDef);
-		otrodFixtureDef.density = 1;  //<--------------------------------------------------------------------------------------------------->
+		(*otrodBody).SetGravityScale(0);//##add##
+		otrodFixtureDef.density = density;//a new addition ##add##  //<--------------------------------------------------------------------------------------------------->
 		otrodFixtureDef.filter.groupIndex = -2;
 		otrodFixtureDef.shape = &otrodShape;
 		(*otrodBody).CreateFixture(&otrodFixtureDef);
-		otrodFixtureDef.density = 1;
+		otrodFixtureDef.density = density;
 
 
 
@@ -277,10 +279,12 @@ namespace cs296
 		otrodBodyDef.position.Set(firstWheelCenterx+gap+wheelRadius/4, groundHeight+wheelRadius*(1+(1.0/4)));
 		otrodBodyDef.angle = -pi/4; //angle is clockwise by default
 		holyrodBody = (*m_world).CreateBody(&otrodBodyDef);
+		(*holyrodBody).SetGravityScale(0);
 		otrodFixtureDef.shape = &otrodShape;
 		otrodFixtureDef.filter.groupIndex = -2;
+		otrodFixtureDef.density = density;
 		(*holyrodBody).CreateFixture(&otrodFixtureDef);
-
+		otrodFixtureDef.density = density;
 		orJointDef.Initialize(wheelBody2, holyrodBody, (*wheelBody2).GetPosition());
 		orJointDef.motorSpeed = 10.0f;
 		orJointDef.maxMotorTorque = 400.0f;
@@ -306,7 +310,7 @@ namespace cs296
 
 		
 		bigrectangle_fixture.shape = &bigrectangle_shape;
-		bigrectangle_fixture.density = 1; //this is a changed thing #added
+		bigrectangle_fixture.density = 1.3; //this is a changed thing #added//##add##
 		bigrectangle_fixture.filter.groupIndex = -2;
 		(*bigrectangle_body).CreateFixture(&bigrectangle_fixture);	
 		b2RevoluteJointDef br_wh_def1; //!< \b Type : \b b2RevoluteJointDef . It is used to create a joint that restricts motion of a bodyB w.r.t bodyA allowing only rotation		
@@ -732,9 +736,9 @@ __________             | |
 		pulley = (*m_world).CreateBody(&backrectangle_def);
 		newFixture.shape = &backrectangle_shape;
 		newFixture.density = density;
+		newFixture.restitution = 0;
 		(*pulley).CreateFixture(&newFixture);
-		newFixture.density = 0;		
-
+		newFixture.density = 0;				
 		psjointtest.bodyB = pulley;
 		psjointtest.localAnchorA = b2Vec2((*pulley).GetWorldCenter().x - (*frontb).GetWorldCenter().x, (*pulley).GetWorldCenter().y - (*frontb).GetWorldCenter().y);
 		(*m_world).CreateJoint(&psjointtest);
@@ -964,6 +968,7 @@ __________             | |
 		stabber_initialjoint_def.angle = - angle_stabber_initialjoint - pi/30;
 		stabber_initialjoint_def.type = b2_dynamicBody;
 		b2Body* stabber_initialjoint_body = (*m_world).CreateBody(&stabber_initialjoint_def);
+		(*stabber_initialjoint_body).SetGravityScale(0);
 		b2FixtureDef stabber_initialjoint_fixture;//!< \b Type : \b b2BodyFixtureDef .It acts like a cover for a body and gives bodies properties like shape, density, friction
 		stabber_initialjoint_fixture.density = 1.0;
 		stabber_initialjoint_fixture.filter.groupIndex = -2;
@@ -993,6 +998,7 @@ __________             | |
 		otrodBodyDef.position.Set(x_holyrod2,groundHeight+wheelRadius*(1+(1.0/2)));
 		otrodBodyDef.angle = 0;
 		holyrodBody2 = (*m_world).CreateBody(&otrodBodyDef);
+		(*holyrodBody2).SetGravityScale(0);
 		otrodFixtureDef.shape = &otrodShape;
 		otrodFixtureDef.filter.groupIndex = -2;
 		(*holyrodBody2).CreateFixture(&otrodFixtureDef);
@@ -1018,6 +1024,7 @@ __________             | |
 		otrodBodyDef.position.Set(x_holyrod3,groundHeight+wheelRadius*(1+(1.0/2))+length_holyrod3*cos(-angle));
 		otrodBodyDef.angle = -angle; //angle is clockwise by default
 		holyrodBody3 = (*m_world).CreateBody(&otrodBodyDef);
+		(*holyrodBody3).SetGravityScale(0);
 	//	(*holyrodBody).SetTransform(b2Vec2(firstWheelCenterx + gap + wheelRadius/4, groundHeight + wheelRadius*(1+0.25)), -pi/4);
 		otrodFixtureDef.shape = &otrodShape;
 		otrodFixtureDef.filter.groupIndex = -2;
@@ -1068,10 +1075,10 @@ __________             | |
 		(*m_world).CreateJoint(&orJointDef);
 	}
 	{
-		float parRadius = smallRadius/5; 
+		float parRadius = smallRadius/2;
 		int parPerLine = (2*frontWidth - 2*rodWidth)/(2*parRadius);
 		float layerWidth = 0.5; 
-		int noLayers = 6;
+		int noLayers = 8;
 		b2CircleShape parShape; 
 		parShape.m_p.Set(0,0); 
 		parShape.m_radius = parRadius;
@@ -1079,7 +1086,7 @@ __________             | |
 		b2FixtureDef parFixture; 
 		parFixture.restitution = 1;
 		//parFixture.filter.groupIndex = -2;
-		parFixture.density = 80; 
+		parFixture.density = 30; 
 		parFixture.shape = &parShape;
 		parFixture.filter.maskBits = 0x0004;
 		parFixture.filter.categoryBits = 0x0002;
@@ -1090,7 +1097,8 @@ __________             | |
 		for(int j = 0; j < noLayers; j++){
 		 for(int i = 0; i < parPerLine; i++){
 		  parBodyDef.position.Set(exco + rodWidth - parRadius + (i+1)*2*parRadius, (*enclosure).GetWorldCenter().y - rodWidth/2 - parRadius - layerWidth*j); 
-		  parBodyDef.linearVelocity.Set(rand()%velocityLimit, -rand()%velocityLimit); 
+//		  parBodyDef.linearVelocity.Set(pow(-1,rand())*(rand()%velocityLimit), pow(-1, rand())*(rand()%velocityLimit)); 
+		  parBodyDef.linearVelocity.Set(rand()%velocityLimit, rand()%velocityLimit); 
 		  particles[i][j] = (*m_world).CreateBody(&parBodyDef); 
 		  (*particles[i][j]).SetGravityScale(0.1); 
 		  (*particles[i][j]).CreateFixture(&parFixture); 
@@ -1100,24 +1108,6 @@ __________             | |
 	
 	(*a).pumpingRod = pumpingRod;
 	(*a).frontl = frontl;
-/*	std::cout << exco << std::endl;
-  (*a).excoa = exco;
-	std::cout << (*a).excoa << std::endl;
-	std::cout << whyco << std::endl;
-  (*a).whycoa = whyco;
-	std::cout << (*a).whycoa << std::endl;
-	std::cout << ml << std::endl;
-  (*a).mla = ml;
-	std::cout << dl << std::endl;
-  (*a).dla = dl;
-	std::cout << cl << std::endl;
-  (*a).cla = cl;
-	std::cout << rodWidth << std::endl;
-  (*a).rodWidtha = rodWidth;
-	std::cout << frontHeight << std::endl;
-  (*a).frontHeighta = frontHeight;
-	std::cout << secondHeight << std::endl;
-	(*a).secondHeighta = secondHeight;*/
 	m_world->b2World::SetContactListener(a);
 
 
